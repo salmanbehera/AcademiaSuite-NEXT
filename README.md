@@ -1,2 +1,0 @@
-# AcademiaSuite-NEXT
-Education Software

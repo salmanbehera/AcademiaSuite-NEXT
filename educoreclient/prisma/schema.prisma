@@ -1,0 +1,768 @@
+// This schema is for TypeScript type generation only
+// The actual data is managed by external .NET Core API
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note: This is a mock datasource for type generation
+// No actual database connection is used
+datasource db {
+  provider = "sqlite"
+  url      = "file:./mock.db"
+}
+
+// User Management
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  role      UserRole
+  avatar    String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  createdStudents Student[] @relation("CreatedByUser")
+  updatedStudents Student[] @relation("UpdatedByUser")
+  createdEmployees Employee[] @relation("CreatedByUser")
+  updatedEmployees Employee[] @relation("UpdatedByUser")
+  auditLogs       AuditLog[]
+
+  @@map("users")
+}
+
+model UserPermission {
+  id     String     @id @default(cuid())
+  userId String
+  permission Permission
+
+  @@unique([userId, permission])
+  @@map("user_permissions")
+}
+
+// Student Management
+model Student {
+  id              String    @id @default(cuid())
+  admissionNumber String    @unique
+  firstName       String
+  lastName        String
+  middleName      String?
+  email           String    @unique
+  phone           String?
+  dateOfBirth     DateTime
+  gender          Gender
+  rollNumber      String
+  academicYear    String
+  admissionDate   DateTime
+  previousSchool  String?
+  avatar          String?
+  status          StudentStatus @default(ENROLLED)
+  
+  // Address
+  street   String
+  city     String
+  state    String
+  zipCode  String
+  country  String
+
+  // Guardian Information
+  fatherName        String
+  fatherOccupation  String?
+  fatherPhone       String?
+  fatherEmail       String?
+  motherName        String
+  motherOccupation  String?
+  motherPhone       String?
+  motherEmail       String?
+  primaryContact    ContactType @default(FATHER)
+  emergencyContact  String
+  emergencyPhone    String
+
+  // Relations
+  classId   String
+  class     Class @relation(fields: [classId], references: [id])
+  documents StudentDocument[]
+  
+  createdBy String
+  createdByUser User @relation("CreatedByUser", fields: [createdBy], references: [id])
+  updatedBy String
+  updatedByUser User @relation("UpdatedByUser", fields: [updatedBy], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("students")
+}
+
+model Class {
+  id               String    @id @default(cuid())
+  name             String
+  grade            Int
+  section          String
+  capacity         Int
+  currentStrength  Int       @default(0)
+  academicYear     String
+  isActive         Boolean   @default(true)
+  
+  classTeacherId   String
+  classTeacher     Employee  @relation(fields: [classTeacherId], references: [id])
+  
+  students         Student[]
+  subjects         Subject[]
+  
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([name, section, academicYear])
+  @@map("classes")
+}
+
+model Subject {
+  id          String      @id @default(cuid())
+  name        String
+  code        String      @unique
+  credits     Int
+  type        SubjectType @default(CORE)
+  description String?
+  
+  classId     String
+  class       Class    @relation(fields: [classId], references: [id])
+  teacherId   String
+  teacher     Employee @relation(fields: [teacherId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("subjects")
+}
+
+model StudentDocument {
+  id         String            @id @default(cuid())
+  type       DocumentType
+  name       String
+  url        String
+  uploadedAt DateTime          @default(now())
+  
+  studentId  String
+  student    Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("student_documents")
+}
+
+// Employee/Payroll Management
+model Employee {
+  id              String    @id @default(cuid())
+  employeeId      String    @unique
+  firstName       String
+  lastName        String
+  middleName      String?
+  email           String    @unique
+  phone           String
+  dateOfBirth     DateTime
+  gender          Gender
+  joinDate        DateTime
+  confirmationDate DateTime?
+  employmentType  EmploymentType @default(FULL_TIME)
+  workSchedule    WorkSchedule   @default(REGULAR)
+  probationPeriod Int?
+  noticePeriod    Int            @default(30)
+  avatar          String?
+  status          EmployeeStatus @default(ACTIVE)
+  
+  // Address
+  street   String
+  city     String
+  state    String
+  zipCode  String
+  country  String
+
+  // Position and Department
+  positionId   String
+  position     Position   @relation(fields: [positionId], references: [id])
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  // Bank Details
+  accountNumber     String
+  bankName          String
+  branchName        String
+  ifscCode          String
+  accountHolderName String
+
+  // Relations
+  salaries          Salary[]
+  payslips          Payslip[]
+  leaveRequests     LeaveRequest[]
+  attendanceRecords Attendance[]
+  documents         EmployeeDocument[]
+  classesAsTeacher  Class[]
+  subjectsAsTeacher Subject[]
+  
+  createdBy String
+  createdByUser User @relation("CreatedByUser", fields: [createdBy], references: [id])
+  updatedBy String
+  updatedByUser User @relation("UpdatedByUser", fields: [updatedBy], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("employees")
+}
+
+model Position {
+  id          String        @id @default(cuid())
+  title       String        @unique
+  level       PositionLevel
+  description String?
+  
+  employees   Employee[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("positions")
+}
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  headId      String?
+  
+  employees   Employee[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("departments")
+}
+
+model Salary {
+  id           String    @id @default(cuid())
+  basicSalary  Decimal   @db.Decimal(10, 2)
+  grossSalary  Decimal   @db.Decimal(10, 2)
+  netSalary    Decimal   @db.Decimal(10, 2)
+  currency     String    @default("INR")
+  payrollCycle PayrollCycle @default(MONTHLY)
+  effectiveDate DateTime
+  
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  
+  allowances   SalaryAllowance[]
+  deductions   SalaryDeduction[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("salaries")
+}
+
+model SalaryAllowance {
+  id           String      @id @default(cuid())
+  type         AllowanceType
+  name         String
+  amount       Decimal     @db.Decimal(10, 2)
+  isPercentage Boolean     @default(false)
+  isTaxable    Boolean     @default(true)
+  
+  salaryId     String
+  salary       Salary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
+
+  @@map("salary_allowances")
+}
+
+model SalaryDeduction {
+  id           String        @id @default(cuid())
+  type         DeductionType
+  name         String
+  amount       Decimal       @db.Decimal(10, 2)
+  isPercentage Boolean       @default(false)
+  
+  salaryId     String
+  salary       Salary @relation(fields: [salaryId], references: [id], onDelete: Cascade)
+
+  @@map("salary_deductions")
+}
+
+model Payslip {
+  id             String        @id @default(cuid())
+  month          Int
+  year           Int
+  payPeriodStart DateTime
+  payPeriodEnd   DateTime
+  grossPay       Decimal       @db.Decimal(10, 2)
+  totalDeductions Decimal      @db.Decimal(10, 2)
+  netPay         Decimal       @db.Decimal(10, 2)
+  workingDays    Int
+  paidDays       Int
+  status         PayslipStatus @default(DRAFT)
+  generatedAt    DateTime      @default(now())
+  paidAt         DateTime?
+  
+  employeeId     String
+  employee       Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, month, year])
+  @@map("payslips")
+}
+
+model LeaveRequest {
+  id          String      @id @default(cuid())
+  leaveType   LeaveType
+  startDate   DateTime
+  endDate     DateTime
+  totalDays   Int
+  reason      String
+  status      LeaveStatus @default(PENDING)
+  appliedAt   DateTime    @default(now())
+  approvedAt  DateTime?
+  approvedBy  String?
+  comments    String?
+  
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("leave_requests")
+}
+
+model Attendance {
+  id           String           @id @default(cuid())
+  date         DateTime         @db.Date
+  checkIn      DateTime?
+  checkOut     DateTime?
+  hoursWorked  Decimal          @db.Decimal(4, 2) @default(0)
+  status       AttendanceStatus @default(PRESENT)
+  remarks      String?
+  
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+  @@map("attendance")
+}
+
+model EmployeeDocument {
+  id         String               @id @default(cuid())
+  type       EmployeeDocumentType
+  name       String
+  url        String
+  uploadedAt DateTime             @default(now())
+  
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_documents")
+}
+
+// Inventory Management
+model InventoryItem {
+  id          String    @id @default(cuid())
+  itemCode    String    @unique
+  name        String
+  description String?
+  status      ItemStatus @default(ACTIVE)
+  tags        String[]
+  images      String[]
+  
+  // Stock Information
+  currentStock     Int      @default(0)
+  minStockLevel    Int      @default(0)
+  maxStockLevel    Int      @default(0)
+  reorderPoint     Int      @default(0)
+  unit             String
+  reservedStock    Int      @default(0)
+  
+  // Pricing
+  costPrice        Decimal  @db.Decimal(10, 2)
+  sellingPrice     Decimal  @db.Decimal(10, 2)
+  mrp              Decimal  @db.Decimal(10, 2)
+  discount         Decimal  @db.Decimal(5, 2) @default(0)
+  taxRate          Decimal  @db.Decimal(5, 2) @default(0)
+  currency         String   @default("INR")
+  
+  // Location
+  warehouse        String
+  zone             String?
+  rack             String?
+  shelf            String?
+  bin              String?
+  
+  // Relations
+  categoryId       String
+  category         Category @relation(fields: [categoryId], references: [id])
+  supplierId       String
+  supplier         Supplier @relation(fields: [supplierId], references: [id])
+  
+  specifications   ItemSpecification[]
+  transactions     StockTransaction[]
+  purchaseOrderItems PurchaseOrderItem[]
+  adjustmentItems  StockAdjustmentItem[]
+  
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("inventory_items")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  parentId    String?
+  level       Int       @default(0)
+  isActive    Boolean   @default(true)
+  
+  parent      Category? @relation("CategoryParent", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryParent")
+  items       InventoryItem[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+model Supplier {
+  id             String    @id @default(cuid())
+  name           String
+  contactPerson  String
+  email          String    @unique
+  phone          String
+  gstNumber      String?
+  panNumber      String?
+  paymentTerms   String
+  rating         Decimal   @db.Decimal(2, 1) @default(0)
+  isActive       Boolean   @default(true)
+  
+  // Address
+  street         String
+  city           String
+  state          String
+  zipCode        String
+  country        String
+  
+  // Bank Details
+  accountNumber     String
+  bankName          String
+  branchName        String
+  ifscCode          String
+  accountHolderName String
+  
+  // Relations
+  items          InventoryItem[]
+  purchaseOrders PurchaseOrder[]
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("suppliers")
+}
+
+model ItemSpecification {
+  id    String @id @default(cuid())
+  name  String
+  value String
+  unit  String?
+  
+  itemId String
+  item   InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@map("item_specifications")
+}
+
+model StockTransaction {
+  id          String            @id @default(cuid())
+  type        TransactionType
+  quantity    Int
+  unit        String
+  reason      String
+  reference   String?
+  remarks     String?
+  performedBy String
+  performedAt DateTime          @default(now())
+  
+  itemId      String
+  item        InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@map("stock_transactions")
+}
+
+model PurchaseOrder {
+  id                   String              @id @default(cuid())
+  orderNumber          String              @unique
+  orderDate            DateTime            @default(now())
+  expectedDeliveryDate DateTime
+  status               PurchaseOrderStatus @default(DRAFT)
+  subtotal             Decimal             @db.Decimal(12, 2)
+  taxAmount            Decimal             @db.Decimal(12, 2)
+  totalAmount          Decimal             @db.Decimal(12, 2)
+  currency             String              @default("INR")
+  terms                String?
+  
+  supplierId           String
+  supplier             Supplier @relation(fields: [supplierId], references: [id])
+  
+  items                PurchaseOrderItem[]
+  
+  createdBy            String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id               String @id @default(cuid())
+  quantity         Int
+  unit             String
+  unitPrice        Decimal @db.Decimal(10, 2)
+  totalPrice       Decimal @db.Decimal(10, 2)
+  receivedQuantity Int     @default(0)
+  pendingQuantity  Int
+  
+  purchaseOrderId  String
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  itemId           String
+  item             InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@map("purchase_order_items")
+}
+
+model StockAdjustment {
+  id               String                    @id @default(cuid())
+  adjustmentNumber String                    @unique
+  reason           String
+  type             AdjustmentType
+  status           AdjustmentStatus          @default(PENDING)
+  approvedBy       String?
+  approvedAt       DateTime?
+  remarks          String?
+  
+  items            StockAdjustmentItem[]
+  
+  createdBy        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("stock_adjustments")
+}
+
+model StockAdjustmentItem {
+  id                  String @id @default(cuid())
+  currentStock        Int
+  adjustedStock       Int
+  adjustmentQuantity  Int
+  reason              String
+  
+  adjustmentId        String
+  adjustment          StockAdjustment @relation(fields: [adjustmentId], references: [id], onDelete: Cascade)
+  itemId              String
+  item                InventoryItem @relation(fields: [itemId], references: [id])
+
+  @@map("stock_adjustment_items")
+}
+
+// Audit Log
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  module     String
+  entityId   String
+  entityType String
+  changes    Json
+  ipAddress  String
+  timestamp  DateTime @default(now())
+  
+  userId     String
+  user       User @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// Enums
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  ACCOUNTANT
+  LIBRARIAN
+}
+
+enum Permission {
+  STUDENT_READ
+  STUDENT_WRITE
+  STUDENT_DELETE
+  PAYROLL_READ
+  PAYROLL_WRITE
+  PAYROLL_DELETE
+  INVENTORY_READ
+  INVENTORY_WRITE
+  INVENTORY_DELETE
+  SYSTEM_CONFIG
+  USER_MANAGEMENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum StudentStatus {
+  ENROLLED
+  GRADUATED
+  TRANSFERRED
+  DROPPED_OUT
+  SUSPENDED
+}
+
+enum ContactType {
+  FATHER
+  MOTHER
+  OTHER
+}
+
+enum SubjectType {
+  CORE
+  ELECTIVE
+  PRACTICAL
+}
+
+enum DocumentType {
+  BIRTH_CERTIFICATE
+  TRANSFER_CERTIFICATE
+  ID_PROOF
+  ADDRESS_PROOF
+  PHOTO
+  OTHER
+}
+
+enum EmployeeStatus {
+  ACTIVE
+  INACTIVE
+  TERMINATED
+  ON_LEAVE
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum WorkSchedule {
+  REGULAR
+  FLEXIBLE
+  REMOTE
+}
+
+enum PositionLevel {
+  JUNIOR
+  SENIOR
+  LEAD
+  MANAGER
+  DIRECTOR
+}
+
+enum PayrollCycle {
+  MONTHLY
+  BI_WEEKLY
+  WEEKLY
+}
+
+enum AllowanceType {
+  HOUSE_RENT
+  TRANSPORT
+  MEDICAL
+  FOOD
+  BONUS
+  OVERTIME
+  OTHER
+}
+
+enum DeductionType {
+  TAX
+  PROVIDENT_FUND
+  INSURANCE
+  LOAN
+  ADVANCE
+  OTHER
+}
+
+enum PayslipStatus {
+  DRAFT
+  PROCESSED
+  PAID
+}
+
+enum LeaveType {
+  SICK
+  CASUAL
+  EARNED
+  MATERNITY
+  PATERNITY
+  UNPAID
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  LATE
+  ON_LEAVE
+}
+
+enum EmployeeDocumentType {
+  RESUME
+  ID_PROOF
+  ADDRESS_PROOF
+  EDUCATIONAL
+  EXPERIENCE
+  OTHER
+}
+
+enum ItemStatus {
+  ACTIVE
+  INACTIVE
+  DISCONTINUED
+}
+
+enum TransactionType {
+  IN
+  OUT
+  ADJUSTMENT
+  TRANSFER
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  ACKNOWLEDGED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum AdjustmentType {
+  INCREASE
+  DECREASE
+  CORRECTION
+}
+
+enum AdjustmentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}

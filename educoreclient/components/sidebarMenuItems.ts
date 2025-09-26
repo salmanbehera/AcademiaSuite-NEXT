@@ -1,5 +1,4 @@
 // components/sidebarMenuItems.ts
-import { Semister } from './../features/student/types/master/semisterTypes';
 export const sidebarMenuItems = [
   {
     label: 'Dashboard',
@@ -36,7 +35,7 @@ export const sidebarMenuItems = [
     icon: '📝',
     children: [
       { label: 'Enquiry', href: '/student/admission/enquiry', icon: '❓' },
-      { label: 'Student Onboarding', href: '/student/admission/onboarding', icon: '✅' },
+  { label: 'Student Onboarding', href: '/student/StudentEnrollment', icon: '✅' },
       { label: 'Student Leave', href: '/student/admission/leave', icon: '🚶' },
       { label: 'Transfer Certificate', href: '/student/admission/transfer', icon: '📄' }
     ]

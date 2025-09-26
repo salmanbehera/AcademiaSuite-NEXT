@@ -17,6 +17,8 @@ export const API_CONFIG = {
     FEEHEADS: '/feeheadmasters',
     FEEGROUPS: '/feegroups',
     CLASS_FEE_MAPPINGS: '/classfeemappings',
+    STUDENTENROLLMENT: '/studentenrollments',
+
   },
   
   // Pagination defaults

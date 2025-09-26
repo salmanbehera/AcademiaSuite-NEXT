@@ -25,16 +25,16 @@ export function PaginationControls({
   onPageSizeChange,
 }: PaginationControlsProps) {
   return (
-    <nav className="bg-white p-4 border border-gray-200 rounded-lg shadow flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-3 lg:space-y-0" aria-label="Pagination">
+    <nav className="bg-white p-2 border border-gray-200 rounded-lg shadow flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-1 lg:space-y-0" aria-label="Pagination">
       {/* Page size selector */}
       <div className="flex items-center space-x-2">
-        <label htmlFor="pageSizeSelect" className="text-sm font-medium text-gray-600">Per page:</label>
+        <label htmlFor="pageSizeSelect" className="text-xs font-medium text-gray-600">Per page:</label>
         <div className="relative inline-block">
           <select
             id="pageSizeSelect"
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="block w-20 bg-white border border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-2 py-1 pr-8 rounded leading-tight text-sm text-gray-700 appearance-none"
+            className="block w-20 bg-white border border-gray-300 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-2 py-0.5 pr-8 rounded leading-tight text-xs text-gray-700 appearance-none"
           >
             {pageSizeOptions.map(size => (
               <option key={size} value={size}>{size}</option>
@@ -49,7 +49,7 @@ export function PaginationControls({
       </div>
 
       {/* Showing info */}
-      <div className="text-sm text-gray-700">
+  <div className="text-xs text-gray-700">
         Showing <span className="font-semibold text-gray-900">{startItem}</span>
         <span> – </span>
         <span className="font-semibold text-gray-900">{endItem}</span>

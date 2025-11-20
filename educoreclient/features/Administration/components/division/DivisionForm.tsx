@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { Button } from "@/app/components/ui/Button";
-import { Input } from '@/app/components/RadixUI/input';
-import { Label } from '@/app/components/RadixUI/label';
-import { useToast } from '@/app/components/ui/ToastProvider';
- import { DIVISION_FORM_DEFAULTS } from "../../Constants/division.constants";
+import { Input } from "@/app/components/RadixUI/input";
+import { Label } from "@/app/components/RadixUI/label";
+import { DIVISION_FORM_DEFAULTS } from "../../Constants/division.constants";
 type DivisionFormProps = {
   onSubmit: (data: any) => void;
   defaultValues?: any;
@@ -12,20 +11,26 @@ type DivisionFormProps = {
 };
 
 function getInitialFormData(defaultValues?: any) {
-  if (defaultValues && defaultValues.id) {
-    return {
-      ...DIVISION_FORM_DEFAULTS,
-      ...defaultValues,
-    };
-  } else {
-    return { ...DIVISION_FORM_DEFAULTS };
-  }
+  // Support both shapes: flat defaultValues or { division: { ... } }
+  const provided = defaultValues?.division
+    ? defaultValues.division
+    : defaultValues;
+  return {
+    ...DIVISION_FORM_DEFAULTS,
+    ...(provided || {}),
+  };
 }
 
-export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultValues, onCancel }) => {
-  const { showSuccess, showError } = useToast();
+export const DivisionForm: React.FC<DivisionFormProps> = ({
+  onSubmit,
+  defaultValues,
+  onCancel,
+}) => {
+  // toasts are handled by the parent page to avoid duplicate notifications
   const { organizationId, branchId } = useOrganization();
-  const [formData, setFormData] = useState<any>(getInitialFormData(defaultValues));
+  const [formData, setFormData] = useState<any>(
+    getInitialFormData(defaultValues)
+  );
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,11 +43,13 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
     setFormErrors({});
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
     const { name, value, type } = target;
     let newValue: any = value;
-    if (type === 'checkbox') {
+    if (type === "checkbox") {
       newValue = (target as HTMLInputElement).checked;
     }
     setFormData({ ...formData, [name]: newValue });
@@ -52,10 +59,10 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
     e.preventDefault();
     const errors: Record<string, string> = {};
     if (!formData.divisionName || !formData.divisionName.trim()) {
-      errors.divisionName = 'Division Name is required.';
+      errors.divisionName = "Division Name is required.";
     }
     if (!formData.divisionCode || !formData.divisionCode.trim()) {
-      errors.divisionCode = 'Division Code is required.';
+      errors.divisionCode = "Division Code is required.";
     }
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -66,29 +73,39 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
         ...formData,
         organizationId,
         branchId,
+        // Send null for optional GUID fields when empty to avoid backend parse errors
+        divisionHeadId: formData.divisionHeadId
+          ? formData.divisionHeadId
+          : null,
         isActive: true,
       };
       if (!defaultValues || !defaultValues.id) {
         delete apiData.id;
       }
+
+      // Let the parent handler manage success/error notifications so we
+      // don't show duplicate toasts. If the parent throws, this will
+      // propagate and the parent will handle it.
       await onSubmit(apiData);
-      showSuccess(
-        defaultValues && defaultValues.id ? 'Division Updated' : 'Division Created',
-        defaultValues && defaultValues.id ? 'Division updated successfully.' : 'Division created successfully.'
-      );
       resetForm();
-    } catch (err) {
-      showError('Error', 'Failed to submit division form.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md space-y-6 max-w-2xl mx-auto">
+    <form
+      onSubmit={handleSubmit}
+      className="p-6 bg-white rounded-lg shadow-md space-y-6 max-w-2xl mx-auto"
+    >
       <div className="space-y-4">
         <div>
-          <Label htmlFor="divisionName" className="text-xs font-medium text-slate-700">Division Name *</Label>
+          <Label
+            htmlFor="divisionName"
+            className="text-xs font-medium text-slate-700"
+          >
+            Division Name *
+          </Label>
           <Input
             id="divisionName"
             name="divisionName"
@@ -99,7 +116,12 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
           />
         </div>
         <div>
-          <Label htmlFor="divisionCode" className="text-xs font-medium text-slate-700">Division Code *</Label>
+          <Label
+            htmlFor="divisionCode"
+            className="text-xs font-medium text-slate-700"
+          >
+            Division Code *
+          </Label>
           <Input
             id="divisionCode"
             name="divisionCode"
@@ -110,7 +132,12 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
           />
         </div>
         <div>
-          <Label htmlFor="description" className="text-xs font-medium text-slate-700">Description</Label>
+          <Label
+            htmlFor="description"
+            className="text-xs font-medium text-slate-700"
+          >
+            Description
+          </Label>
           <Input
             id="description"
             name="description"
@@ -127,7 +154,7 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
           size="sm"
           onClick={() => {
             resetForm();
-            if (typeof onCancel === 'function') onCancel();
+            if (typeof onCancel === "function") onCancel();
           }}
         >
           Cancel
@@ -139,7 +166,7 @@ export const DivisionForm: React.FC<DivisionFormProps> = ({ onSubmit, defaultVal
           disabled={isSubmitting}
           loading={isSubmitting}
         >
-          {(defaultValues && defaultValues.id) ? 'Update' : 'Create'}
+          {defaultValues && defaultValues.id ? "Update" : "Create"}
         </Button>
       </div>
     </form>

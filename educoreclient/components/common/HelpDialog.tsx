@@ -1,60 +1,59 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { 
-  BookOpen, 
-  Plus, 
-  Edit3, 
-  Trash2, 
-  Upload, 
-  Download, 
-  Search, 
-  Filter,
-  Eye,
-  EyeOff,
+import React from "react";
+import {
+  BookOpen,
+  Plus,
+  Edit3,
+  Upload,
+  Download,
+  Search,
   CheckSquare,
-  Square,
   FileText,
   AlertCircle,
   CheckCircle,
-  Info
-} from 'lucide-react';
-import { Modal } from '@/app/components/ui/Modal';
+  Info,
+} from "lucide-react";
+import { Modal } from "@/app/components/ui/Modal";
 
 interface HelpDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  contentType?: 'class' | 'section' | 'studentcategory' | 'academicYear';
+  contentType?: "class" | "section" | "studentcategory" | "academicYear";
 }
 
-const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 'class' }) => {
-  const isSection = contentType === 'section';
-  const isStudentCategory = contentType === 'studentcategory';
-  const isAcademicYear = contentType === 'academicYear';
+const HelpDialog: React.FC<HelpDialogProps> = ({
+  isOpen,
+  onClose,
+  contentType = "class",
+}) => {
+  const isSection = contentType === "section";
+  const isStudentCategory = contentType === "studentcategory";
+  const isAcademicYear = contentType === "academicYear";
 
   // Entity names for each type
   const entityName = isAcademicYear
-    ? 'Academic Year'
+    ? "Academic Year"
     : isStudentCategory
-    ? 'Student Category'
+    ? "Student Category"
     : isSection
-    ? 'Section'
-    : 'Class';
+    ? "Section"
+    : "Class";
   const entityNameLower = isAcademicYear
-    ? 'academic year'
+    ? "academic year"
     : isStudentCategory
-    ? 'student category'
+    ? "student category"
     : isSection
-    ? 'section'
-    : 'class';
+    ? "section"
+    : "class";
   const entityNamePlural = isAcademicYear
-    ? 'academic years'
+    ? "academic years"
     : isStudentCategory
-    ? 'student categories'
+    ? "student categories"
     : isSection
-    ? 'sections'
-    : 'classes';
-  
+    ? "sections"
+    : "classes";
+
   return (
     <Modal
       isOpen={isOpen}
@@ -63,7 +62,6 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
       size="xl"
     >
       <div className="space-y-6 max-h-96 overflow-y-auto">
-        
         {/* Quick Start */}
         <section>
           <h3 className="text-sm font-semibold text-slate-900 mb-3 flex items-center">
@@ -72,11 +70,18 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
           </h3>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
             <p className="text-blue-900 mb-2">
-              Welcome to {entityName} Management! This system helps you create, manage, and organize academic {entityNamePlural} for your institution.
+              Welcome to {entityName} Management! This system helps you create,
+              manage, and organize academic {entityNamePlural} for your
+              institution.
             </p>
             <ul className="text-blue-800 space-y-1 list-disc list-inside">
-              <li>View all {entityNamePlural} in a professional table format</li>
-              <li>Create new {entityNamePlural} with detailed {isSection ? 'capacity' : 'capacity'} settings</li>
+              <li>
+                View all {entityNamePlural} in a professional table format
+              </li>
+              <li>
+                Create new {entityNamePlural} with detailed{" "}
+                {isSection ? "capacity" : "capacity"} settings
+              </li>
               <li>Edit existing {entityNamePlural} and manage their status</li>
               <li>Import/Export {entityNameLower} data for bulk operations</li>
               <li>Search and filter {entityNamePlural} efficiently</li>
@@ -96,23 +101,52 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
                 <Plus className="h-3.5 w-3.5 mr-1 text-green-600" />
                 Create New {entityName}
               </h4>
-              <p className="text-xs text-slate-600 mb-2">Click "Create New" button to add a new {entityNameLower}:</p>
+              <p className="text-xs text-slate-600 mb-2">
+                Click &quot;Create New&quot; button to add a new{" "}
+                {entityNameLower}:
+              </p>
               <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside ml-2">
-                <li><strong>{entityName} Name:</strong> Full name (e.g., "{isStudentCategory ? 'General Category' : isSection ? 'Section A' : 'Class 10'}")</li>
-                <li><strong>{entityName} Code:</strong> Short identifier (e.g., "{isStudentCategory ? 'GEN' : isSection ? 'SEC-A' : 'C10'}")</li>
-                <li><strong>Display Order:</strong> Sorting sequence number</li>
-                <li><strong>Max Strength:</strong> Maximum student capacity</li>
-                {!isSection && !isStudentCategory && <li><strong>Reserved Seats:</strong> Seats reserved for special categories</li>}
-                <li><strong>Status:</strong> Active or Inactive</li>
+                <li>
+                  <strong>{entityName} Name:</strong> Full name (e.g., &quot;
+                  {isStudentCategory
+                    ? "General Category"
+                    : isSection
+                    ? "Section A"
+                    : "Class 10"}
+                  &quot;)
+                </li>
+                <li>
+                  <strong>{entityName} Code:</strong> Short identifier (e.g.,
+                  &quot;
+                  {isStudentCategory ? "GEN" : isSection ? "SEC-A" : "C10"}
+                  &quot;)
+                </li>
+                <li>
+                  <strong>Display Order:</strong> Sorting sequence number
+                </li>
+                <li>
+                  <strong>Max Strength:</strong> Maximum student capacity
+                </li>
+                {!isSection && !isStudentCategory && (
+                  <li>
+                    <strong>Reserved Seats:</strong> Seats reserved for special
+                    categories
+                  </li>
+                )}
+                <li>
+                  <strong>Status:</strong> Active or Inactive
+                </li>
               </ul>
             </div>
-            
+
             <div className="border border-slate-200 rounded-lg p-3">
               <h4 className="font-medium text-slate-800 mb-2 flex items-center">
                 <Edit3 className="h-3.5 w-3.5 mr-1 text-blue-600" />
                 Edit {entityName}
               </h4>
-              <p className="text-xs text-slate-600 mb-2">Click the edit icon (pencil) in any row to:</p>
+              <p className="text-xs text-slate-600 mb-2">
+                Click the edit icon (pencil) in any row to:
+              </p>
               <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside ml-2">
                 <li>Modify {entityNameLower} details</li>
                 <li>Update capacity settings</li>
@@ -132,7 +166,9 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
           <div className="border border-slate-200 rounded-lg p-3">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <h4 className="font-medium text-slate-800 mb-2">Search Features:</h4>
+                <h4 className="font-medium text-slate-800 mb-2">
+                  Search Features:
+                </h4>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside ml-2">
                   <li>Search by {entityNameLower} name or code</li>
                   <li>Real-time filtering as you type</li>
@@ -141,7 +177,9 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
                 </ul>
               </div>
               <div>
-                <h4 className="font-medium text-slate-800 mb-2">Status Management:</h4>
+                <h4 className="font-medium text-slate-800 mb-2">
+                  Status Management:
+                </h4>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside ml-2">
                   <li>Click status badge to toggle Active/Inactive</li>
                   <li>Green badge = Active {entityNameLower}</li>
@@ -160,18 +198,29 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
             Bulk Operations
           </h3>
           <div className="border border-slate-200 rounded-lg p-3">
-            <h4 className="font-medium text-slate-800 mb-2">How to use Bulk Update:</h4>
+            <h4 className="font-medium text-slate-800 mb-2">
+              How to use Bulk Update:
+            </h4>
             <ol className="text-xs text-slate-600 space-y-1 list-decimal list-inside ml-2">
-              <li>Click "More Actions" → "Bulk Update" to enable selection mode</li>
+              <li>
+                Click &quot;More Actions&quot; → &quot;Bulk Update&quot; to
+                enable selection mode
+              </li>
               <li>Checkboxes will appear in the first column</li>
-              <li>Select individual {entityNamePlural} or use "Select All" checkbox</li>
+              <li>
+                Select individual {entityNamePlural} or use &quot;Select
+                All&quot; checkbox
+              </li>
               <li>Bulk Actions panel appears with delete option</li>
-              <li>Click "Exit Bulk Update" to return to normal mode</li>
+              <li>
+                Click &quot;Exit Bulk Update&quot; to return to normal mode
+              </li>
             </ol>
             <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded">
               <p className="text-xs text-amber-800 flex items-center">
                 <AlertCircle className="h-3 w-3 mr-1" />
-                <strong>Note:</strong> Bulk delete performs soft delete (sets isActive = false)
+                <strong>Note:</strong> Bulk delete performs soft delete (sets
+                isActive = false)
               </p>
             </div>
           </div>
@@ -190,7 +239,10 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
                 Import {entityNamePlural}
               </h4>
               <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside ml-2">
-                <li>Click "More Actions" → "Import {entityNamePlural}"</li>
+                <li>
+                  Click &quot;More Actions&quot; → &quot;Import{" "}
+                  {entityNamePlural}&quot;
+                </li>
                 <li>Upload CSV, XLSX, or XLS files</li>
                 <li>Download sample template for correct format</li>
                 <li>Drag & drop or click to browse files</li>
@@ -198,18 +250,24 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
               </ul>
               <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded">
                 <p className="text-xs text-green-800">
-                  <strong>Required columns:</strong> {entityName} Name, {entityName} Code, Display Order, Max Strength{!isSection && !isStudentCategory ? ', Reserved Seats' : ''}, Status
+                  <strong>Required columns:</strong> {entityName} Name,{" "}
+                  {entityName} Code, Display Order, Max Strength
+                  {!isSection && !isStudentCategory ? ", Reserved Seats" : ""},
+                  Status
                 </p>
               </div>
             </div>
-            
+
             <div className="border border-slate-200 rounded-lg p-3">
               <h4 className="font-medium text-slate-800 mb-2 flex items-center">
                 <Download className="h-3.5 w-3.5 mr-1 text-green-600" />
                 Export {entityNamePlural}
               </h4>
               <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside ml-2">
-                <li>Click "More Actions" → "Export {entityNamePlural}"</li>
+                <li>
+                  Click &quot;More Actions&quot; → &quot;Export{" "}
+                  {entityNamePlural}&quot;
+                </li>
                 <li>Downloads CSV file with all visible {entityNamePlural}</li>
                 <li>Includes filtered results if search is active</li>
                 <li>File named with current date</li>
@@ -217,7 +275,8 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
               </ul>
               <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
                 <p className="text-xs text-blue-800">
-                  <strong>Tip:</strong> Use search to filter before export for specific data sets
+                  <strong>Tip:</strong> Use search to filter before export for
+                  specific data sets
                 </p>
               </div>
             </div>
@@ -233,20 +292,30 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="border border-slate-200 rounded p-2 text-center">
               <div className="text-slate-700 font-medium text-xs">Total</div>
-              <div className="text-slate-600 text-xs">All {entityNamePlural} in system</div>
+              <div className="text-slate-600 text-xs">
+                All {entityNamePlural} in system
+              </div>
             </div>
             <div className="border border-emerald-200 rounded p-2 text-center bg-emerald-50">
               <div className="text-emerald-700 font-medium text-xs">Active</div>
-              <div className="text-emerald-600 text-xs">Currently active {entityNamePlural}</div>
+              <div className="text-emerald-600 text-xs">
+                Currently active {entityNamePlural}
+              </div>
             </div>
             <div className="border border-blue-200 rounded p-2 text-center bg-blue-50">
               <div className="text-blue-700 font-medium text-xs">Capacity</div>
-              <div className="text-blue-600 text-xs">Total student capacity</div>
+              <div className="text-blue-600 text-xs">
+                Total student capacity
+              </div>
             </div>
             {!isSection && !isStudentCategory && (
               <div className="border border-amber-200 rounded p-2 text-center bg-amber-50">
-                <div className="text-amber-700 font-medium text-xs">Reserved</div>
-                <div className="text-amber-600 text-xs">Reserved seat count</div>
+                <div className="text-amber-700 font-medium text-xs">
+                  Reserved
+                </div>
+                <div className="text-amber-600 text-xs">
+                  Reserved seat count
+                </div>
               </div>
             )}
           </div>
@@ -260,19 +329,36 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
           </h3>
           <div className="space-y-3">
             <div className="border border-slate-200 rounded-lg p-3">
-              <h4 className="font-medium text-slate-800 mb-2">Common Issues:</h4>
+              <h4 className="font-medium text-slate-800 mb-2">
+                Common Issues:
+              </h4>
               <div className="space-y-2">
                 <div>
-                  <p className="text-xs font-medium text-slate-700">Q: Import fails with validation errors</p>
-                  <p className="text-xs text-slate-600 ml-2">A: Download the sample template and ensure your CSV matches the exact format. Check for missing required fields.</p>
+                  <p className="text-xs font-medium text-slate-700">
+                    Q: Import fails with validation errors
+                  </p>
+                  <p className="text-xs text-slate-600 ml-2">
+                    A: Download the sample template and ensure your CSV matches
+                    the exact format. Check for missing required fields.
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-700">Q: {entityNamePlural} not showing after creation</p>
-                  <p className="text-xs text-slate-600 ml-2">A: Click the "Refresh" button or check if you have search filters applied.</p>
+                  <p className="text-xs font-medium text-slate-700">
+                    Q: {entityNamePlural} not showing after creation
+                  </p>
+                  <p className="text-xs text-slate-600 ml-2">
+                    A: Click the &quot;Refresh&quot; button or check if you have
+                    search filters applied.
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-slate-700">Q: Cannot delete {entityNameLower}</p>
-                  <p className="text-xs text-slate-600 ml-2">A: System performs soft delete (isActive = false). {entityNamePlural} remain in database but become inactive.</p>
+                  <p className="text-xs font-medium text-slate-700">
+                    Q: Cannot delete {entityNameLower}
+                  </p>
+                  <p className="text-xs text-slate-600 ml-2">
+                    A: System performs soft delete (isActive = false).{" "}
+                    {entityNamePlural} remain in database but become inactive.
+                  </p>
                 </div>
               </div>
             </div>
@@ -287,19 +373,51 @@ const HelpDialog: React.FC<HelpDialogProps> = ({ isOpen, onClose, contentType = 
           </h3>
           <div className="border border-slate-200 rounded-lg p-3">
             <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside">
-              <li><strong>{entityName} Codes:</strong> Use consistent naming ({isStudentCategory ? 'GEN, OBC, SC, ST...' : isSection ? 'SEC-A, SEC-B, SEC-C...' : 'C1, C2, C3...'}) for easy sorting</li>
-              <li><strong>Display Order:</strong> Use incremental numbers (1, 2, 3...) for proper sequencing</li>
-              <li><strong>Capacity Planning:</strong> Set Max Strength based on {isStudentCategory ? 'category limits' : isSection ? 'section' : 'classroom'} capacity</li>
-              {!isSection && !isStudentCategory && <li><strong>Reserved Seats:</strong> Account for special categories (SC/ST/OBC quotas)</li>}
-              <li><strong>Regular Backups:</strong> Export {entityNameLower} data periodically for backup</li>
-              <li><strong>Bulk Operations:</strong> Use import for initial setup, export for reports</li>
-              <li><strong>Search Efficiency:</strong> Use {entityNameLower} codes for faster search results</li>
+              <li>
+                <strong>{entityName} Codes:</strong> Use consistent naming (
+                {isStudentCategory
+                  ? "GEN, OBC, SC, ST..."
+                  : isSection
+                  ? "SEC-A, SEC-B, SEC-C..."
+                  : "C1, C2, C3..."}
+                ) for easy sorting
+              </li>
+              <li>
+                <strong>Display Order:</strong> Use incremental numbers (1, 2,
+                3...) for proper sequencing
+              </li>
+              <li>
+                <strong>Capacity Planning:</strong> Set Max Strength based on{" "}
+                {isStudentCategory
+                  ? "category limits"
+                  : isSection
+                  ? "section"
+                  : "classroom"}{" "}
+                capacity
+              </li>
+              {!isSection && !isStudentCategory && (
+                <li>
+                  <strong>Reserved Seats:</strong> Account for special
+                  categories (SC/ST/OBC quotas)
+                </li>
+              )}
+              <li>
+                <strong>Regular Backups:</strong> Export {entityNameLower} data
+                periodically for backup
+              </li>
+              <li>
+                <strong>Bulk Operations:</strong> Use import for initial setup,
+                export for reports
+              </li>
+              <li>
+                <strong>Search Efficiency:</strong> Use {entityNameLower} codes
+                for faster search results
+              </li>
             </ul>
           </div>
         </section>
-
       </div>
-      
+
       {/* Footer */}
       <div className="mt-6 pt-4 border-t border-slate-200">
         <div className="flex justify-between items-center">

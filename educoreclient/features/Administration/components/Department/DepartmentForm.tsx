@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useOrganization } from '@/contexts/OrganizationContext';
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { Button } from "@/app/components/ui/Button";
-import { Input } from '@/app/components/RadixUI/input';
-import { Label } from '@/app/components/RadixUI/label';
-import { useToast } from '@/app/components/ui/ToastProvider';
+import { Input } from "@/app/components/RadixUI/input";
+import { Label } from "@/app/components/RadixUI/label";
+import { useToast } from "@/app/components/ui/ToastProvider";
 import { DEPARTMENT_FORM_DEFAULTS } from "../../Constants/department.constants";
 import { useDivision } from "../../hooks/useDivision";
-import { Select } from '@/app/components/ui/Select';
+import { Select } from "@/app/components/ui/Select";
 import axios from "axios";
 import { AxiosError } from "axios";
 
@@ -27,10 +27,16 @@ function getInitialFormData(defaultValues?: any) {
   }
 }
 
-export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaultValues, onCancel }) => {
+export const DepartmentForm: React.FC<DepartmentFormProps> = ({
+  onSubmit,
+  defaultValues,
+  onCancel,
+}) => {
   const { showSuccess, showError } = useToast();
   const { organizationId, branchId } = useOrganization();
-  const [formData, setFormData] = useState<any>(getInitialFormData(defaultValues));
+  const [formData, setFormData] = useState<any>(
+    getInitialFormData(defaultValues)
+  );
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { divisions } = useDivision();
@@ -44,11 +50,13 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
     setFormErrors({});
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const target = e.target as HTMLInputElement | HTMLSelectElement;
     const { name, value, type } = target;
     let newValue: any = value;
-    if (type === 'checkbox') {
+    if (type === "checkbox") {
       newValue = (target as HTMLInputElement).checked;
     }
     setFormData({ ...formData, [name]: newValue });
@@ -58,14 +66,17 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
     e.preventDefault();
     const errors: Record<string, string> = {};
 
-    if (!formData.divisionId || !divisions.some(division => division.id === formData.divisionId)) {
-      errors.divisionId = 'Please select a valid division.';
+    if (
+      !formData.divisionId ||
+      !divisions.some((division) => division.id === formData.divisionId)
+    ) {
+      errors.divisionId = "Please select a valid division.";
     }
     if (!formData.departmentName || !formData.departmentName.trim()) {
-      errors.departmentName = 'Department Name is required.';
+      errors.departmentName = "Department Name is required.";
     }
     if (!formData.departmentCode || !formData.departmentCode.trim()) {
-      errors.departmentCode = 'Department Code is required.';
+      errors.departmentCode = "Department Code is required.";
     }
 
     setFormErrors(errors);
@@ -77,12 +88,24 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
         ...formData,
         organizationId,
         branchId,
+        // For optional GUID fields, send null when empty to avoid invalid GUID parsing on server
+        departmentHeadId: formData.departmentHeadId
+          ? formData.departmentHeadId
+          : null,
+        ParentDepartmentId: formData.ParentDepartmentId
+          ? formData.ParentDepartmentId
+          : null,
         isActive: true,
       };
 
-      console.log('API Payload:', apiData); // Debugging log for API payload
+      // When creating a new department, do not send an empty `id` field.
+      // Sending an empty string for GUID fields causes model binding failures on the server.
+      if (!defaultValues || !defaultValues.id) {
+        // Remove `id` so the server doesn't attempt to parse an invalid GUID
+        delete apiData.id;
+      }
 
-     
+      console.log("API Payload:", apiData); // Debugging log for API payload
 
       const response = await onSubmit(apiData);
 
@@ -100,24 +123,42 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
     }
   };
 
-  const divisionOptions = divisions.map(division => ({ value: division.id, label: division.divisionName }));
+  const divisionOptions = divisions.map((division) => ({
+    value: division.id,
+    label: division.divisionName,
+  }));
 
   return (
-    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md space-y-6 max-w-2xl mx-auto">
+    <form
+      onSubmit={handleSubmit}
+      className="p-6 bg-white rounded-lg shadow-md space-y-6 max-w-2xl mx-auto"
+    >
       <div className="space-y-4">
         <div>
-          <Label htmlFor="divisionId" className="text-xs font-medium text-slate-700">Division</Label>
+          <Label
+            htmlFor="divisionId"
+            className="text-xs font-medium text-slate-700"
+          >
+            Division
+          </Label>
           <Select
-            value={formData.divisionId ?? ''}
+            value={formData.divisionId ?? ""}
             options={divisionOptions}
-            onChange={value => setFormData({ ...formData, divisionId: value })}
+            onChange={(value) =>
+              setFormData({ ...formData, divisionId: value })
+            }
             error={formErrors.divisionId}
             className="text-slate-900"
             placeholder="Select a division"
           />
         </div>
         <div>
-          <Label htmlFor="departmentName" className="text-xs font-medium text-slate-700">Department Name *</Label>
+          <Label
+            htmlFor="departmentName"
+            className="text-xs font-medium text-slate-700"
+          >
+            Department Name *
+          </Label>
           <Input
             id="departmentName"
             name="departmentName"
@@ -128,7 +169,12 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
           />
         </div>
         <div>
-          <Label htmlFor="departmentCode" className="text-xs font-medium text-slate-700">Department Code *</Label>
+          <Label
+            htmlFor="departmentCode"
+            className="text-xs font-medium text-slate-700"
+          >
+            Department Code *
+          </Label>
           <Input
             id="departmentCode"
             name="departmentCode"
@@ -139,7 +185,12 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
           />
         </div>
         <div>
-          <Label htmlFor="description" className="text-xs font-medium text-slate-700">Description</Label>
+          <Label
+            htmlFor="description"
+            className="text-xs font-medium text-slate-700"
+          >
+            Description
+          </Label>
           <Input
             id="description"
             name="description"
@@ -156,7 +207,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
           size="sm"
           onClick={() => {
             resetForm();
-            if (typeof onCancel === 'function') onCancel();
+            if (typeof onCancel === "function") onCancel();
           }}
         >
           Cancel
@@ -168,7 +219,7 @@ export const DepartmentForm: React.FC<DepartmentFormProps> = ({ onSubmit, defaul
           disabled={isSubmitting}
           loading={isSubmitting}
         >
-          {(defaultValues && defaultValues.id) ? 'Update' : 'Create'}
+          {defaultValues && defaultValues.id ? "Update" : "Create"}
         </Button>
       </div>
     </form>

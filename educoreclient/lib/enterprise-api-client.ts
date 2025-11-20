@@ -1,11 +1,11 @@
-import axios, { 
-  AxiosInstance, 
-  AxiosRequestConfig, 
-  AxiosResponse, 
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
   AxiosError,
-  InternalAxiosRequestConfig 
-} from 'axios';
-import { API_CONFIG } from '@/lib/config';
+  InternalAxiosRequestConfig,
+} from "axios";
+import { API_CONFIG } from "@/lib/config";
 
 // Enhanced API Response interface
 export interface ApiResponse<T = any> {
@@ -59,14 +59,14 @@ const HTTP_STATUS = {
 
 // Error Messages
 const ERROR_MESSAGES = {
-  UNAUTHORIZED: 'Unauthorized access. Redirecting to login...',
-  FORBIDDEN: 'Access forbidden. Insufficient permissions.',
-  NOT_FOUND: 'Resource not found.',
-  VALIDATION_ERROR: 'Validation errors occurred.',
-  SERVER_ERROR: 'Internal server error. Please try again later.',
-  NETWORK_ERROR: 'Network error. Please check your connection.',
-  REQUEST_ERROR: 'Request error occurred.',
-  GENERIC_ERROR: 'An unexpected error occurred.',
+  UNAUTHORIZED: "Unauthorized access. Redirecting to login...",
+  FORBIDDEN: "Access forbidden. Insufficient permissions.",
+  NOT_FOUND: "Resource not found.",
+  VALIDATION_ERROR: "Validation errors occurred.",
+  SERVER_ERROR: "Internal server error. Please try again later.",
+  NETWORK_ERROR: "Network error. Please check your connection.",
+  REQUEST_ERROR: "Request error occurred.",
+  GENERIC_ERROR: "An unexpected error occurred.",
 } as const;
 
 // Default Configuration
@@ -74,13 +74,13 @@ const DEFAULT_CONFIG = {
   TIMEOUT: 10000,
   RETRY_ATTEMPTS: 3,
   RETRY_DELAY: 1000,
-  ENABLE_LOGGING: process.env.NODE_ENV === 'development',
+  ENABLE_LOGGING: process.env.NODE_ENV === "development",
 } as const;
 
 // Request Headers
 const DEFAULT_HEADERS = {
-  'Content-Type': 'application/json',
-  'Accept': 'application/json',
+  "Content-Type": "application/json",
+  Accept: "application/json",
 } as const;
 
 /**
@@ -90,37 +90,74 @@ class ApiLogger {
   private isDevelopment: boolean;
 
   constructor() {
-    this.isDevelopment = process.env.NODE_ENV === 'development';
+    this.isDevelopment = process.env.NODE_ENV === "development";
   }
 
   logRequest(config: InternalAxiosRequestConfig): void {
     if (!this.isDevelopment) return;
 
-    console.log(`🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`, {
-      headers: config.headers,
-      data: config.data,
-      params: config.params,
-    });
+    console.log(
+      `🚀 [API Request] ${config.method?.toUpperCase()} ${config.url}`,
+      {
+        headers: config.headers,
+        data: config.data,
+        params: config.params,
+      }
+    );
   }
 
   logResponse(response: AxiosResponse): void {
     if (!this.isDevelopment) return;
 
-    console.log(`✅ [API Response] ${response.config.method?.toUpperCase()} ${response.config.url}`, {
-      status: response.status,
-      data: response.data,
-    });
+    console.log(
+      `✅ [API Response] ${response.config.method?.toUpperCase()} ${
+        response.config.url
+      }`,
+      {
+        status: response.status,
+        data: response.data,
+      }
+    );
   }
 
   logError(error: AxiosError): void {
     if (!this.isDevelopment) return;
 
-    console.error(`❌ [API Error] ${error.config?.method?.toUpperCase()} ${error.config?.url}`, {
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      message: error.message,
-    });
+    // Check if this is a benign 404 (empty data response)
+    const data = error.response?.data as any;
+    const detail = (
+      typeof data === "string"
+        ? data
+        : data?.detail || data?.message || data?.error || ""
+    ).toLowerCase();
+    const isBenign404 =
+      error.response?.status === 404 &&
+      (detail.includes("no students found") ||
+        detail.includes("no data found") ||
+        detail.includes("no records found") ||
+        detail.includes("no enrollment") ||
+        detail === ""); // Empty response data for 404 is also benign in this context
+
+    // Skip logging benign 404s
+    if (isBenign404) {
+      console.info(
+        `📭 [Empty Result] ${error.config?.url}`,
+        detail || "No data"
+      );
+      return;
+    }
+
+    console.error(
+      `❌ [API Error] ${error.config?.method?.toUpperCase()} ${
+        error.config?.url
+      }`,
+      {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message,
+      }
+    );
   }
 
   warn(message: string): void {
@@ -144,8 +181,8 @@ class ApiErrorHandler {
   handleUnauthorized(): void {
     this.clearTokenCallback();
     this.logger.warn(ERROR_MESSAGES.UNAUTHORIZED);
-    
-    if (typeof window !== 'undefined') {
+
+    if (typeof window !== "undefined") {
       // Client-side redirect
       // window.location.href = '/login';
     }
@@ -156,14 +193,42 @@ class ApiErrorHandler {
     this.showErrorToUser(ERROR_MESSAGES.FORBIDDEN);
   }
 
-  handleNotFound(): void {
-    this.logger.error(ERROR_MESSAGES.NOT_FOUND);
-    this.showErrorToUser(ERROR_MESSAGES.NOT_FOUND);
+  handleNotFound(data?: any): void {
+    // Check if this is a benign "not found" (e.g., empty data) vs actual error
+    const detail = (
+      typeof data === "string"
+        ? data
+        : data?.detail || data?.message || data?.error || ""
+    ).toLowerCase();
+    const isBenignNotFound =
+      detail.includes("no students found") ||
+      detail.includes("no data found") ||
+      detail.includes("no records found") ||
+      detail.includes("no enrollment") ||
+      detail === ""; // Empty response is benign for list endpoints
+
+    // For benign cases (empty data sets), just log to console in dev mode
+    if (isBenignNotFound) {
+      if (process.env.NODE_ENV === "development") {
+        console.info("📭 Empty result:", detail || "No data");
+      }
+      return; // Don't show error to user
+    }
+
+    // Only log and show error for actual resource-not-found errors
+    this.logger.error(ERROR_MESSAGES.NOT_FOUND, data);
+
+    const userMessage =
+      data && (data.message || data.error)
+        ? `${ERROR_MESSAGES.NOT_FOUND} - ${data.message || data.error}`
+        : ERROR_MESSAGES.NOT_FOUND;
+
+    this.showErrorToUser(userMessage);
   }
 
   handleValidationErrors(data: any): void {
     this.logger.error(ERROR_MESSAGES.VALIDATION_ERROR, data);
-    
+
     if (data?.errors) {
       this.showValidationErrors(data.errors);
     } else {
@@ -171,9 +236,21 @@ class ApiErrorHandler {
     }
   }
 
-  handleServerError(): void {
-    this.logger.error(ERROR_MESSAGES.SERVER_ERROR);
-    this.showErrorToUser(ERROR_MESSAGES.SERVER_ERROR);
+  handleServerError(data?: any): void {
+    this.logger.error(ERROR_MESSAGES.SERVER_ERROR, data);
+
+    // If backend provided a message or details, include it in the developer console output
+    if (process.env.NODE_ENV === "development") {
+      console.error("Server Error Details:", data);
+    }
+
+    // Surface a friendly message to the user
+    const userMessage =
+      data && (data.message || data.error)
+        ? `${ERROR_MESSAGES.SERVER_ERROR} - ${data.message || data.error}`
+        : ERROR_MESSAGES.SERVER_ERROR;
+
+    this.showErrorToUser(userMessage);
   }
 
   handleGenericError(response: AxiosResponse): void {
@@ -193,12 +270,12 @@ class ApiErrorHandler {
   }
 
   private showErrorToUser(message: string): void {
-    console.error('User Error:', message);
+    console.error("User Error:", message);
   }
 
   private showValidationErrors(errors: Record<string, string[]>): void {
     Object.entries(errors).forEach(([field, messages]) => {
-      messages.forEach(message => {
+      messages.forEach((message) => {
         this.showErrorToUser(`${field}: ${message}`);
       });
     });
@@ -242,7 +319,7 @@ class ApiRetryService {
   }
 
   private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   static defaultShouldRetry(error: AxiosError): boolean {
@@ -255,7 +332,7 @@ class ApiRetryService {
 
 /**
  * Enterprise-grade API Client using Axios with proper separation of concerns
- * 
+ *
  * Features:
  * - Request/Response interceptors
  * - Automatic token management
@@ -276,7 +353,7 @@ class EnterpriseApiClient {
     // Merge default config with custom config
     this.config = {
       // Ensure no trailing slash so endpoints concatenate correctly
-      baseURL: API_CONFIG.BASE_URL.replace(/\/+$/, ''),
+      baseURL: API_CONFIG.BASE_URL.replace(/\/+$/, ""),
       timeout: DEFAULT_CONFIG.TIMEOUT,
       retryAttempts: DEFAULT_CONFIG.RETRY_ATTEMPTS,
       retryDelay: DEFAULT_CONFIG.RETRY_DELAY,
@@ -286,9 +363,8 @@ class EnterpriseApiClient {
 
     // Initialize services
     this.logger = new ApiLogger();
-    this.errorHandler = new ApiErrorHandler(
-      this.logger,
-      () => this.clearAccessToken()
+    this.errorHandler = new ApiErrorHandler(this.logger, () =>
+      this.clearAccessToken()
     );
 
     // Create axios instance
@@ -329,7 +405,9 @@ class EnterpriseApiClient {
   /**
    * Request interceptor for authentication and logging
    */
-  private requestInterceptor(config: InternalAxiosRequestConfig): InternalAxiosRequestConfig {
+  private requestInterceptor(
+    config: InternalAxiosRequestConfig
+  ): InternalAxiosRequestConfig {
     // Add authentication token
     if (this.accessToken) {
       config.headers.Authorization = `Bearer ${this.accessToken}`;
@@ -364,7 +442,9 @@ class EnterpriseApiClient {
   /**
    * Response error interceptor with enterprise error handling
    */
-  private async responseErrorInterceptor(error: AxiosError): Promise<AxiosError> {
+  private async responseErrorInterceptor(
+    error: AxiosError
+  ): Promise<AxiosError> {
     const { response, request, message } = error;
 
     // Log error
@@ -380,13 +460,16 @@ class EnterpriseApiClient {
           this.errorHandler.handleForbidden();
           break;
         case HTTP_STATUS.NOT_FOUND:
-          this.errorHandler.handleNotFound();
+          // Provide response body to handler so any server-provided message
+          // is surfaced to users (prevents 'undefined' in logs/UI).
+          this.errorHandler.handleNotFound(response.data);
           break;
         case HTTP_STATUS.UNPROCESSABLE_ENTITY:
           this.errorHandler.handleValidationErrors(response.data);
           break;
         case HTTP_STATUS.INTERNAL_SERVER_ERROR:
-          this.errorHandler.handleServerError();
+          // Pass server response body to the handler so it can be surfaced in dev
+          this.errorHandler.handleServerError(response.data);
           break;
         default:
           this.errorHandler.handleGenericError(response);
@@ -449,8 +532,8 @@ class EnterpriseApiClient {
    * GET request with enterprise features
    */
   async get<T>(
-    endpoint: string, 
-    params?: Record<string, any>, 
+    endpoint: string,
+    params?: Record<string, any>,
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.executeWithRetry(() =>
@@ -465,8 +548,8 @@ class EnterpriseApiClient {
    * POST request with enterprise features
    */
   async post<T>(
-    endpoint: string, 
-    data?: any, 
+    endpoint: string,
+    data?: any,
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.executeWithRetry(() =>
@@ -478,8 +561,8 @@ class EnterpriseApiClient {
    * PUT request with enterprise features
    */
   async put<T>(
-    endpoint: string, 
-    data?: any, 
+    endpoint: string,
+    data?: any,
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.executeWithRetry(() =>
@@ -491,8 +574,8 @@ class EnterpriseApiClient {
    * PATCH request with enterprise features
    */
   async patch<T>(
-    endpoint: string, 
-    data?: any, 
+    endpoint: string,
+    data?: any,
     config?: AxiosRequestConfig
   ): Promise<T> {
     return this.executeWithRetry(() =>
@@ -503,10 +586,7 @@ class EnterpriseApiClient {
   /**
    * DELETE request with enterprise features
    */
-  async delete<T>(
-    endpoint: string, 
-    config?: AxiosRequestConfig
-  ): Promise<T> {
+  async delete<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
     return this.executeWithRetry(() =>
       this.axiosInstance.delete<T>(endpoint, config)
     );
@@ -524,7 +604,7 @@ class EnterpriseApiClient {
     config?: AxiosRequestConfig
   ): Promise<T> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append("file", file);
 
     return this.uploadFormData<T>(endpoint, formData, onProgress, config);
   }
@@ -557,11 +637,13 @@ class EnterpriseApiClient {
   ): Promise<T> {
     const response = await this.axiosInstance.post<T>(endpoint, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (progressEvent) => {
         if (onProgress && progressEvent.total) {
-          const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
           onProgress(progress);
         }
       },
@@ -600,7 +682,7 @@ class EnterpriseApiClient {
    */
   updateConfig(newConfig: Partial<ApiConfig>): void {
     this.config = { ...this.config, ...newConfig };
-    
+
     // Recreate axios instance with new config
     this.axiosInstance = this.createAxiosInstance();
     this.setupInterceptors();
@@ -615,7 +697,9 @@ class EnterpriseApiClient {
 }
 
 // Create and export singleton instance
-export const apiClient = new EnterpriseApiClient({ timeout: API_CONFIG.TIMEOUT });
+export const apiClient = new EnterpriseApiClient({
+  timeout: API_CONFIG.TIMEOUT,
+});
 
 // Export the class for custom instances if needed
 export default EnterpriseApiClient;

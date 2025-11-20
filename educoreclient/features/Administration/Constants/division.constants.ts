@@ -1,14 +1,18 @@
-export const DIVISION_API_ENDPOINT = "https://localhost:7051/divisions/";
+import { API_CONFIG } from "@/lib/config";
+
+// Resolve base URL from central config and ensure no duplicate slashes
+export const DIVISION_API_ENDPOINT = `${API_CONFIG.BASE_URL.replace(
+  /\/+$|\/$/g,
+  ""
+)}/divisions/`;
 
 export const DIVISION_FORM_DEFAULTS = {
-  division: {
-    id: "", // UUID for the division
-    organizationId: "", // UUID for the organization
-    branchId: "", // UUID for the branch
-    divisionName: "", // Name of the division
-    divisionCode: "", // Code for the division
-    description: "", // Description of the division
-    divisionHeadId: "", // UUID for the division head
-    isActive: true // Status of the division
-  }
+  id: "",
+  organizationId: "",
+  branchId: "",
+  divisionName: "",
+  divisionCode: "",
+  description: "",
+  divisionHeadId: "",
+  isActive: true,
 };

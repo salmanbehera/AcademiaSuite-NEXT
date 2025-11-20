@@ -1,17 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState, useRef } from 'react';
-import { Upload, X, Download, AlertCircle, CheckCircle, FileText } from 'lucide-react';
-import { Button } from '@/app/components/ui/Button';
-import { Modal } from '@/app/components/ui/Modal';
+import React, { useState, useRef } from "react";
+import {
+  Upload,
+  X,
+  Download,
+  AlertCircle,
+  CheckCircle,
+  FileText,
+} from "lucide-react";
+import { Button } from "@/app/components/ui/Button";
+import { Modal } from "@/app/components/ui/Modal";
 
 interface ImportDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (file: File, onProgress?: (progress: number) => void) => Promise<{ success: number; errors: any[] } | null>;
+  onImport: (
+    file: File,
+    onProgress?: (progress: number) => void
+  ) => Promise<{ success: number; errors: unknown[] } | null>;
   title: string;
   description: string;
-  sampleData?: Record<string, any>[];
+  sampleData?: Record<string, unknown>[];
   acceptedFormats?: string[];
 }
 
@@ -22,21 +32,24 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   title,
   description,
   sampleData = [],
-  acceptedFormats = ['.csv', '.xlsx', '.xls']
+  acceptedFormats = [".csv", ".xlsx", ".xls"],
 }) => {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [result, setResult] = useState<{ success: number; errors: any[] } | null>(null);
+  const [result, setResult] = useState<{
+    success: number;
+    errors: unknown[];
+  } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
+    if (e.type === "dragenter" || e.type === "dragover") {
       setDragActive(true);
-    } else if (e.type === 'dragleave') {
+    } else if (e.type === "dragleave") {
       setDragActive(false);
     }
   };
@@ -52,9 +65,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   };
 
   const handleFileSelect = (selectedFile: File) => {
-    const fileExtension = '.' + selectedFile.name.split('.').pop()?.toLowerCase();
+    const fileExtension =
+      "." + selectedFile.name.split(".").pop()?.toLowerCase();
     if (!acceptedFormats.includes(fileExtension)) {
-      alert(`Please select a valid file format: ${acceptedFormats.join(', ')}`);
+      alert(`Please select a valid file format: ${acceptedFormats.join(", ")}`);
       return;
     }
 
@@ -82,7 +96,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 
       setResult(importResult);
     } catch (error) {
-      console.error('Import failed:', error);
+      console.error("Import failed:", error);
     } finally {
       setUploading(false);
     }
@@ -93,23 +107,25 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 
     const headers = Object.keys(sampleData[0]);
     const csvContent = [
-      headers.join(','),
-      ...sampleData.map(row => 
-        headers.map(header => {
-          const value = row[header];
-          return typeof value === 'string' && value.includes(',') 
-            ? `"${value.replace(/"/g, '""')}"` 
-            : value;
-        }).join(',')
-      )
-    ].join('\n');
+      headers.join(","),
+      ...sampleData.map((row) =>
+        headers
+          .map((header) => {
+            const value = row[header];
+            return typeof value === "string" && value.includes(",")
+              ? `"${value.replace(/"/g, '""')}"`
+              : value;
+          })
+          .join(",")
+      ),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'sample_import_template.csv');
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute("download", "sample_import_template.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -121,7 +137,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
     setProgress(0);
     setUploading(false);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
@@ -133,17 +149,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title={title}
-      size="lg"
-    >
+    <Modal isOpen={isOpen} onClose={handleClose} title={title} size="lg">
       <div className="space-y-6">
         {/* Description */}
-        <div className="text-sm text-slate-600">
-          {description}
-        </div>
+        <div className="text-sm text-slate-600">{description}</div>
 
         {/* Sample Download */}
         {sampleData.length > 0 && (
@@ -151,7 +160,9 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <FileText className="h-4 w-4 text-blue-600" />
-                <span className="text-sm font-medium text-blue-900">Download Sample Template</span>
+                <span className="text-sm font-medium text-blue-900">
+                  Download Sample Template
+                </span>
               </div>
               <Button
                 variant="outline"
@@ -164,7 +175,8 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
               </Button>
             </div>
             <p className="text-xs text-blue-700 mt-2">
-              Download a sample CSV file with the correct format and example data.
+              Download a sample CSV file with the correct format and example
+              data.
             </p>
           </div>
         )}
@@ -173,10 +185,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
         <div
           className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
             dragActive
-              ? 'border-blue-400 bg-blue-50'
+              ? "border-blue-400 bg-blue-50"
               : file
-              ? 'border-green-400 bg-green-50'
-              : 'border-slate-300 hover:border-slate-400'
+              ? "border-green-400 bg-green-50"
+              : "border-slate-300 hover:border-slate-400"
           }`}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
@@ -186,12 +198,12 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
           <input
             ref={fileInputRef}
             type="file"
-            accept={acceptedFormats.join(',')}
+            accept={acceptedFormats.join(",")}
             onChange={handleFileChange}
             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
             disabled={uploading}
           />
-          
+
           {file ? (
             <div className="space-y-2">
               <CheckCircle className="h-12 w-12 text-green-600 mx-auto" />
@@ -207,7 +219,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
                 Drop your file here or click to browse
               </div>
               <div className="text-sm text-slate-600">
-                Supports: {acceptedFormats.join(', ')} (Max 10MB)
+                Supports: {acceptedFormats.join(", ")} (Max 10MB)
               </div>
             </div>
           )}
@@ -231,24 +243,32 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
 
         {/* Results */}
         {result && (
-          <div className={`border rounded-lg p-4 ${
-            result.errors.length > 0 ? 'border-amber-200 bg-amber-50' : 'border-green-200 bg-green-50'
-          }`}>
+          <div
+            className={`border rounded-lg p-4 ${
+              result.errors.length > 0
+                ? "border-amber-200 bg-amber-50"
+                : "border-green-200 bg-green-50"
+            }`}
+          >
             <div className="flex items-center space-x-2 mb-2">
               {result.errors.length > 0 ? (
                 <AlertCircle className="h-4 w-4 text-amber-600" />
               ) : (
                 <CheckCircle className="h-4 w-4 text-green-600" />
               )}
-              <span className={`font-medium ${
-                result.errors.length > 0 ? 'text-amber-900' : 'text-green-900'
-              }`}>
+              <span
+                className={`font-medium ${
+                  result.errors.length > 0 ? "text-amber-900" : "text-green-900"
+                }`}
+              >
                 Import Completed
               </span>
             </div>
-            <div className={`text-sm ${
-              result.errors.length > 0 ? 'text-amber-700' : 'text-green-700'
-            }`}>
+            <div
+              className={`text-sm ${
+                result.errors.length > 0 ? "text-amber-700" : "text-green-700"
+              }`}
+            >
               Successfully imported: {result.success} records
               {result.errors.length > 0 && (
                 <div className="mt-1">
@@ -262,11 +282,17 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
                   View Errors ({result.errors.length})
                 </summary>
                 <div className="mt-2 max-h-32 overflow-y-auto">
-                  {result.errors.slice(0, 5).map((error, index) => (
-                    <div key={index} className="text-xs text-amber-600 py-1">
-                      Row {error.row}: {error.message}
-                    </div>
-                  ))}
+                  {result.errors.slice(0, 5).map((error, index) => {
+                    const err = error as
+                      | { row?: number; message?: string }
+                      | any;
+                    return (
+                      <div key={index} className="text-xs text-amber-600 py-1">
+                        Row {err?.row ?? index + 1}:{" "}
+                        {String(err?.message ?? err)}
+                      </div>
+                    );
+                  })}
                   {result.errors.length > 5 && (
                     <div className="text-xs text-amber-600 py-1">
                       ... and {result.errors.length - 5} more errors
@@ -285,7 +311,7 @@ const ImportDialog: React.FC<ImportDialogProps> = ({
             onClick={handleClose}
             disabled={uploading}
           >
-            {result ? 'Close' : 'Cancel'}
+            {result ? "Close" : "Cancel"}
           </Button>
           {!result && (
             <Button

@@ -1,29 +1,48 @@
+"use client";
 
-'use client';
-
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from "react";
 
 // --- Types ---
-import type { StudentCategory, StudentCategoryCreateRequest as StudentCategoryFormData } from '@/features/student/types/master/studentCategoryTypes';
-import { Edit, Trash2, RefreshCw, AlertCircle, Tag, CheckCircle2, Plus, MoreVertical, HelpCircle } from 'lucide-react';
-import { Upload, Download } from 'lucide-react';
-import { StudentCategoryService } from '@/features/student/services/master/studentCategoryService';
-import { validateCreateStudentCategory, validateUpdateStudentCategory, StudentCategoryValidationError } from '@/lib/validation/Academic/studentCategorySchema';
-// Validation helpers
-import { StudentCategorySchema } from '@/lib/validation/Academic/studentCategorySchema';
-import { useOrganization } from '@/contexts/OrganizationContext';
-import { useBulkSelection } from '@/hooks/useBulkSelection';
-import { MasterBulkActions, MasterImportDialog, MasterHelpDialog } from '@/features/student/shared';
-import { Button } from '@/app/components/ui/Button';
-import { Checkbox } from '@/app/components/ui/Checkbox';
-import { StatsCard } from '@/app/components/ui/StatsCard';
-import { SearchBox } from '@/app/components/ui/SearchBox';
-import { Modal } from '@/app/components/ui/Modal';
-import { Input } from '@/app/components/ui/Input';
-import { StatusBadge } from '@/app/components/ui/StatusBadge';
-import { ConfirmationDialog } from '@/app/components/ui/ConfirmationDialog';
-import { useToast } from '@/app/components/ui/ToastProvider';
-import { OrganizationConfig } from '@/app/components/ui/OrganizationConfig';
+import type {
+  StudentCategory,
+  StudentCategoryCreateRequest as StudentCategoryFormData,
+} from "@/features/student/types/master/studentCategoryTypes";
+import {
+  Edit,
+  Trash2,
+  RefreshCw,
+  AlertCircle,
+  Tag,
+  CheckCircle2,
+  Plus,
+  MoreVertical,
+  HelpCircle,
+} from "lucide-react";
+import { Upload, Download } from "lucide-react";
+import { StudentCategoryService } from "@/features/student/services/master/studentCategoryService";
+import {
+  validateCreateStudentCategory,
+  validateUpdateStudentCategory,
+  StudentCategoryValidationError,
+  StudentCategorySchema,
+} from "@/features/student/Validations/studentCategorySchema";
+import { useOrganization } from "@/contexts/OrganizationContext";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import {
+  MasterBulkActions,
+  MasterImportDialog,
+  MasterHelpDialog,
+} from "@/features/student/shared";
+import { Button } from "@/app/components/ui/Button";
+import { Checkbox } from "@/app/components/ui/Checkbox";
+import { StatsCard } from "@/app/components/ui/StatsCard";
+import { SearchBox } from "@/app/components/ui/SearchBox";
+import { Modal } from "@/app/components/ui/Modal";
+import { Input } from "@/app/components/ui/Input";
+import { StatusBadge } from "@/app/components/ui/StatusBadge";
+import { ConfirmationDialog } from "@/app/components/ui/ConfirmationDialog";
+import { useToast } from "@/app/components/ui/ToastProvider";
+import { OrganizationConfig } from "@/app/components/ui/OrganizationConfig";
 
 export default function StudentCategoryPage() {
   // --- Import handler (matches class page pattern) ---
@@ -32,28 +51,42 @@ export default function StudentCategoryPage() {
     onProgress?: (progress: number) => void
   ): Promise<{ success: number; errors: any[] } | null> => {
     try {
-      const result = await StudentCategoryService.importStudentCategories(file, 'csv');
+      const result = await StudentCategoryService.importStudentCategories(
+        file,
+        "csv"
+      );
       if (result) {
-        toast.showSuccess('Import Successful', `${result.success || 0} categories imported successfully.${result.errors && result.errors.length > 0 ? ` ${result.errors.length} records failed.` : ''}`);
+        toast.showSuccess(
+          "Import Successful",
+          `${result.success || 0} categories imported successfully.${
+            result.errors && result.errors.length > 0
+              ? ` ${result.errors.length} records failed.`
+              : ""
+          }`
+        );
         refresh();
       }
       return result;
     } catch (error) {
-      toast.showError('Import Failed', 'Failed to import student categories. Please try again.');
+      toast.showError(
+        "Import Failed",
+        "Failed to import student categories. Please try again."
+      );
       return null;
     }
   };
   const { organizationId, branchId, isReady } = useOrganization();
 
   // --- State & Hooks ---
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingCategory, setEditingCategory] = useState<StudentCategory | null>(null);
+  const [editingCategory, setEditingCategory] =
+    useState<StudentCategory | null>(null);
   const [formData, setFormData] = useState<StudentCategoryFormData>({
-    organizationId: organizationId || '',
-    branchId: branchId || '',
-    categoryName: '',
-    categoryShortName: '',
+    organizationId: organizationId || "",
+    branchId: branchId || "",
+    categoryName: "",
+    categoryShortName: "",
     isActive: true,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -62,28 +95,45 @@ export default function StudentCategoryPage() {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showHelpDialog, setShowHelpDialog] = useState(false);
   const [bulkUpdateMode, setBulkUpdateMode] = useState(false);
-  const [confirmDialog, setConfirmDialog] = useState<{ isOpen: boolean; onConfirm: (() => Promise<void>) | null; title: string; message: string; loading: boolean }>({ isOpen: false, onConfirm: null, title: '', message: '', loading: false });
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    onConfirm: (() => Promise<void>) | null;
+    title: string;
+    message: string;
+    loading: boolean;
+  }>({
+    isOpen: false,
+    onConfirm: null,
+    title: "",
+    message: "",
+    loading: false,
+  });
   const moreActionsRef = useRef(null);
   const toast = useToast();
 
   // --- Data ---
-  const [studentCategories, setStudentCategories] = useState<StudentCategory[]>([]);
+  const [studentCategories, setStudentCategories] = useState<StudentCategory[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [totalCount, setTotalCount] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const refresh = () => fetchCategories();
 
-
   // --- API Logic ---
   const fetchCategories = async () => {
     // eslint-disable-next-line no-console
-    console.log('fetchCategories called', { isReady, organizationId, branchId });
+    console.log("fetchCategories called", {
+      isReady,
+      organizationId,
+      branchId,
+    });
     // TEMP: Bypass isReady for debugging
     if (!organizationId || !branchId) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const res = await StudentCategoryService.getStudentCategories({
         pageIndex,
@@ -91,7 +141,9 @@ export default function StudentCategoryPage() {
         organizationId,
         branchId,
       });
-      const categories: StudentCategory[] = Array.isArray(res?.studentcategorydto?.data)
+      const categories: StudentCategory[] = Array.isArray(
+        res?.studentcategorydto?.data
+      )
         ? res.studentcategorydto.data.map((cat: any) => ({
             ...cat,
             createdAt: cat.createdAt ? new Date(cat.createdAt) : undefined,
@@ -101,22 +153,20 @@ export default function StudentCategoryPage() {
       setStudentCategories(categories);
       setTotalCount(categories.length);
     } catch (err: any) {
-      setError(err?.message || 'Failed to fetch categories');
+      setError(err?.message || "Failed to fetch categories");
     } finally {
       setLoading(false);
     }
   };
 
-
   useEffect(() => {
     fetchCategories();
   }, [pageIndex, pageSize]);
 
-
   const createStudentCategory = async (formData: StudentCategoryFormData) => {
     if (!isReady || !organizationId || !branchId) return;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       // Validate form data
       const validated = validateCreateStudentCategory({
@@ -129,13 +179,17 @@ export default function StudentCategoryPage() {
       if (!validated.success) {
         throw new StudentCategoryValidationError(validated.error);
       }
-      await StudentCategoryService.createStudentCategory(validated.data);
+      const payload = {
+        ...validated.data,
+        isActive: validated.data.isActive ?? true,
+      } as any;
+      await StudentCategoryService.createStudentCategory(payload);
       fetchCategories();
     } catch (err: any) {
       if (err instanceof StudentCategoryValidationError) {
-        setError(Object.values(err.getFieldErrors()).join(', '));
+        setError(Object.values(err.getFieldErrors()).join(", "));
       } else {
-        setError(err?.message || 'Failed to create category');
+        setError(err?.message || "Failed to create category");
       }
       throw err;
     } finally {
@@ -143,11 +197,13 @@ export default function StudentCategoryPage() {
     }
   };
 
-
-  const updateStudentCategory = async (id: string, formData: StudentCategoryFormData) => {
+  const updateStudentCategory = async (
+    id: string,
+    formData: StudentCategoryFormData
+  ) => {
     if (!isReady || !organizationId || !branchId) return false;
     setLoading(true);
-    setError('');
+    setError("");
     try {
       // Validate form data
       const validated = validateUpdateStudentCategory({
@@ -161,14 +217,23 @@ export default function StudentCategoryPage() {
       if (!validated.success) {
         throw new StudentCategoryValidationError(validated.error);
       }
-      await StudentCategoryService.updateStudentCategory(id, validated.data);
+      const payload = {
+        ...validated.data,
+        createdAt: validated.data.createdAt
+          ? (validated.data.createdAt as Date).toISOString()
+          : undefined,
+        updatedAt: validated.data.updatedAt
+          ? (validated.data.updatedAt as Date).toISOString()
+          : undefined,
+      } as any;
+      await StudentCategoryService.updateStudentCategory(id, payload);
       fetchCategories();
       return true;
     } catch (err: any) {
       if (err instanceof StudentCategoryValidationError) {
-        setError(Object.values(err.getFieldErrors()).join(', '));
+        setError(Object.values(err.getFieldErrors()).join(", "));
       } else {
-        setError(err?.message || 'Failed to update category');
+        setError(err?.message || "Failed to update category");
       }
       return false;
     } finally {
@@ -176,14 +241,13 @@ export default function StudentCategoryPage() {
     }
   };
 
-
   const deleteStudentCategory = async (id: string) => {
     setLoading(true);
-    setError('');
+    setError("");
     try {
       // Find the category in the current list
-      const categoryToDelete = studentCategories.find(cat => cat.id === id);
-      if (!categoryToDelete) throw new Error('Category not found');
+      const categoryToDelete = studentCategories.find((cat) => cat.id === id);
+      if (!categoryToDelete) throw new Error("Category not found");
       const { createdAt, updatedAt, ...rest } = categoryToDelete;
       const fullUpdateData = {
         ...rest,
@@ -194,7 +258,7 @@ export default function StudentCategoryPage() {
       await StudentCategoryService.updateStudentCategory(id, fullUpdateData);
       fetchCategories();
     } catch (err: any) {
-      setError(err?.message || 'Failed to delete category');
+      setError(err?.message || "Failed to delete category");
       throw err;
     } finally {
       setLoading(false);
@@ -214,41 +278,46 @@ export default function StudentCategoryPage() {
   const nextPage = () => setPageIndex((prev) => prev + 1);
   const prevPage = () => setPageIndex((prev) => Math.max(prev - 1, 0));
 
-
   // --- Import/Export logic (CSV, matching class page) ---
   const generateCSV = (data: StudentCategory[]) => {
     // Match class/section page: consistent header, quoted values, handle commas in values
-    const headers = ['Category Name', 'Category Code', 'Status'];
-    const csvRows = [headers.join(',')];
-    data.forEach(cat => {
+    const headers = ["Category Name", "Category Code", "Status"];
+    const csvRows = [headers.join(",")];
+    data.forEach((cat) => {
       const row = [
-        `"${(cat.categoryName ?? '').replace(/"/g, '""')}"`,
-        `"${(cat.categoryShortName ?? '').replace(/"/g, '""')}"`,
-        cat.isActive ? 'Active' : 'Inactive'
+        `"${(cat.categoryName ?? "").replace(/"/g, '""')}"`,
+        `"${(cat.categoryShortName ?? "").replace(/"/g, '""')}"`,
+        cat.isActive ? "Active" : "Inactive",
       ];
-      csvRows.push(row.join(','));
+      csvRows.push(row.join(","));
     });
-    return csvRows.join('\r\n');
+    return csvRows.join("\r\n");
   };
 
   const exportCategories = async () => {
     try {
       const exportData = filteredCategories;
       const csvContent = generateCSV(exportData);
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
       if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `student_categories_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `student_categories_${new Date().toISOString().split("T")[0]}.csv`
+        );
+        link.style.visibility = "hidden";
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.showSuccess('Export Complete', `${exportData.length} categories exported successfully.`);
+        toast.showSuccess(
+          "Export Complete",
+          `${exportData.length} categories exported successfully.`
+        );
       }
     } catch (error) {
-      toast.showError('Export Failed', 'Failed to export student categories.');
+      toast.showError("Export Failed", "Failed to export student categories.");
     }
   };
 
@@ -304,7 +373,6 @@ export default function StudentCategoryPage() {
     await refresh();
   };
 
-
   // --- Bulk Selection ---
   const {
     selectedItems,
@@ -316,27 +384,30 @@ export default function StudentCategoryPage() {
   } = useBulkSelection(studentCategories.map((c: any) => c.id));
 
   // --- Derived Data ---
-  const filteredCategories = studentCategories.filter((cat: any) =>
-    cat.categoryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cat.categoryShortName.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCategories = studentCategories.filter(
+    (cat: any) =>
+      cat.categoryName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cat.categoryShortName.toLowerCase().includes(searchTerm.toLowerCase())
   );
   // ...existing code...
 
   // --- Form Logic ---
-  const resetForm = () => setFormData({
-    organizationId: organizationId || '',
-    branchId: branchId || '',
-    categoryName: '',
-    categoryShortName: '',
-    isActive: true,
-  });
+  const resetForm = () =>
+    setFormData({
+      organizationId: organizationId || "",
+      branchId: branchId || "",
+      categoryName: "",
+      categoryShortName: "",
+      isActive: true,
+    });
   const resetFormErrors = () => setFormErrors({});
-  const handleInputChange = (field: string, value: any) => setFormData((prev: any) => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: string, value: any) =>
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
   const handleEdit = (category: StudentCategory) => {
     setEditingCategory(category);
     setFormData({
-      organizationId: organizationId || '',
-      branchId: branchId || '',
+      organizationId: organizationId || "",
+      branchId: branchId || "",
       categoryName: category.categoryName,
       categoryShortName: category.categoryShortName,
       isActive: category.isActive,
@@ -348,29 +419,47 @@ export default function StudentCategoryPage() {
     setConfirmDialog({
       isOpen: true,
       onConfirm: async () => {
-        setConfirmDialog(prev => ({ ...prev, loading: true }));
+        setConfirmDialog((prev) => ({ ...prev, loading: true }));
         try {
           // Fix date type mismatch for API
-          const categoryToDelete = studentCategories.find(cat => cat.id === category.id);
-          if (!categoryToDelete) throw new Error('Category not found');
+          const categoryToDelete = studentCategories.find(
+            (cat) => cat.id === category.id
+          );
+          if (!categoryToDelete) throw new Error("Category not found");
           const fullUpdateData = {
             ...categoryToDelete,
             organizationId,
             branchId,
             isActive: false,
-            createdAt: categoryToDelete.createdAt ? categoryToDelete.createdAt.toISOString() : undefined,
-            updatedAt: categoryToDelete.updatedAt ? categoryToDelete.updatedAt.toISOString() : undefined,
+            createdAt: categoryToDelete.createdAt
+              ? categoryToDelete.createdAt.toISOString()
+              : undefined,
+            updatedAt: categoryToDelete.updatedAt
+              ? categoryToDelete.updatedAt.toISOString()
+              : undefined,
           };
-          await StudentCategoryService.updateStudentCategory(category.id, fullUpdateData);
-          toast.showSuccess('Success', 'Category deleted');
+          await StudentCategoryService.updateStudentCategory(
+            category.id,
+            fullUpdateData
+          );
+          toast.showSuccess("Success", "Category deleted");
           refresh();
         } catch (err: any) {
-          toast.showError('Error', err?.response?.data?.message || 'Delete failed');
+          toast.showError(
+            "Error",
+            err?.response?.data?.message || "Delete failed"
+          );
         } finally {
-          setConfirmDialog({ isOpen: false, onConfirm: null, title: '', message: '', loading: false });
+          setConfirmDialog({
+            isOpen: false,
+            onConfirm: null,
+            title: "",
+            message: "",
+            loading: false,
+          });
         }
       },
-      title: 'Delete Category',
+      title: "Delete Category",
       message: `Are you sure you want to delete "${category.categoryName}"?`,
       loading: false,
     });
@@ -379,29 +468,36 @@ export default function StudentCategoryPage() {
     e.preventDefault();
     resetFormErrors();
     // Validate form
-    const result = StudentCategorySchema.omit({ id: true, createdAt: true, updatedAt: true }).safeParse({
+    const result = StudentCategorySchema.omit({
+      id: true,
+      createdAt: true,
+      updatedAt: true,
+    }).safeParse({
       ...formData,
       organizationId,
       branchId,
     });
     if (!result.success) {
       const errors: Record<string, string> = {};
-      result.error.issues.forEach(issue => {
+      result.error.issues.forEach((issue) => {
         errors[String(issue.path[0])] = issue.message;
       });
       setFormErrors(errors);
-      toast.showWarning('Validation Error', 'Please fix the errors in the form before submitting.');
+      toast.showWarning(
+        "Validation Error",
+        "Please fix the errors in the form before submitting."
+      );
       return;
     }
     setIsSubmitting(true);
     try {
       await createStudentCategory(formData);
-      toast.showSuccess('Success', 'Category created');
+      toast.showSuccess("Success", "Category created");
       setShowAddForm(false);
       resetForm();
       refresh();
     } catch (err: any) {
-      toast.showError('Error', err?.response?.data?.message || 'Create failed');
+      toast.showError("Error", err?.response?.data?.message || "Create failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -410,41 +506,49 @@ export default function StudentCategoryPage() {
     e.preventDefault();
     resetFormErrors();
     // Validate form
-    const result = StudentCategorySchema.partial().extend({
-      id: StudentCategorySchema.shape.id,
-      organizationId: StudentCategorySchema.shape.organizationId,
-      branchId: StudentCategorySchema.shape.branchId,
-    }).safeParse({
-      ...formData,
-      id: editingCategory?.id,
-      organizationId,
-      branchId,
-    });
+    const result = StudentCategorySchema.partial()
+      .extend({
+        id: StudentCategorySchema.shape.id,
+        organizationId: StudentCategorySchema.shape.organizationId,
+        branchId: StudentCategorySchema.shape.branchId,
+      })
+      .safeParse({
+        ...formData,
+        id: editingCategory?.id,
+        organizationId,
+        branchId,
+      });
     if (!result.success) {
       const errors: Record<string, string> = {};
-      result.error.issues.forEach(issue => {
+      result.error.issues.forEach((issue) => {
         errors[String(issue.path[0])] = issue.message;
       });
       setFormErrors(errors);
-      toast.showWarning('Validation Error', 'Please fix the errors in the form before submitting.');
+      toast.showWarning(
+        "Validation Error",
+        "Please fix the errors in the form before submitting."
+      );
       return;
     }
     setIsSubmitting(true);
     try {
       if (editingCategory && editingCategory.id) {
-        const success = await updateStudentCategory(editingCategory.id, formData);
+        const success = await updateStudentCategory(
+          editingCategory.id,
+          formData
+        );
         if (success) {
-          toast.showSuccess('Success', 'Category updated');
+          toast.showSuccess("Success", "Category updated");
           setShowAddForm(false);
           setEditingCategory(null);
           resetForm();
           refresh();
         } else {
-          toast.showError('Error', error || 'Update failed');
+          toast.showError("Error", error || "Update failed");
         }
       }
     } catch (err: any) {
-      toast.showError('Error', err?.response?.data?.message || 'Update failed');
+      toast.showError("Error", err?.response?.data?.message || "Update failed");
     } finally {
       setIsSubmitting(false);
     }
@@ -455,35 +559,40 @@ export default function StudentCategoryPage() {
       await exportCategories();
       // No extra toast here; exportCategories already shows the correct message
     } catch (err: any) {
-      toast.showError('Error', err?.response?.data?.message || 'Export failed');
+      toast.showError("Error", err?.response?.data?.message || "Export failed");
     }
   };
-
-
 
   // --- Effects ---
 
   useEffect(() => {
     if (!showMoreActions) return;
     function handleClickOutside(e: MouseEvent) {
-      if (moreActionsRef.current && (moreActionsRef.current as HTMLElement).contains(e.target as Node)) {
+      if (
+        moreActionsRef.current &&
+        (moreActionsRef.current as HTMLElement).contains(e.target as Node)
+      ) {
         // inside
       } else {
         setShowMoreActions(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showMoreActions]);
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/40">
       <div className="max-w-7xl mx-auto p-4 space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white rounded-lg shadow-sm border border-slate-200/60 p-2.5">
           <div>
-            <h1 className="text-base font-bold text-slate-900 tracking-tight">Student Category Management</h1>
-            <p className="mt-0.5 text-xs text-slate-600">Configure and manage student categories for your institution</p>
+            <h1 className="text-base font-bold text-slate-900 tracking-tight">
+              Student Category Management
+            </h1>
+            <p className="mt-0.5 text-xs text-slate-600">
+              Configure and manage student categories for your institution
+            </p>
           </div>
           <div className="mt-2 sm:mt-0 flex items-center space-x-2">
             <Button
@@ -500,7 +609,11 @@ export default function StudentCategoryPage() {
               variant="primary"
               size="sm"
               icon={Plus}
-              onClick={() => { resetForm(); setEditingCategory(null); setShowAddForm(true); }}
+              onClick={() => {
+                resetForm();
+                setEditingCategory(null);
+                setShowAddForm(true);
+              }}
             >
               Add Category
             </Button>
@@ -511,8 +624,12 @@ export default function StudentCategoryPage() {
         <div className="bg-white rounded-lg shadow-sm border border-slate-200/60 p-2.5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-medium text-slate-900">Organization Configuration</h3>
-              <p className="text-xs text-slate-600 mt-0.5">Current organization and branch settings</p>
+              <h3 className="text-xs font-medium text-slate-900">
+                Organization Configuration
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Current organization and branch settings
+              </p>
             </div>
             <OrganizationConfig />
           </div>
@@ -524,7 +641,9 @@ export default function StudentCategoryPage() {
             <div className="flex items-start">
               <AlertCircle className="h-3.5 w-3.5 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
               <div className="flex-1">
-                <h3 className="text-xs font-medium text-red-900">Error occurred</h3>
+                <h3 className="text-xs font-medium text-red-900">
+                  Error occurred
+                </h3>
                 <p className="mt-0.5 text-xs text-red-700">{error}</p>
               </div>
               <Button
@@ -576,7 +695,9 @@ export default function StudentCategoryPage() {
             {/* Left: Title, Count, Bulk Update Indicator */}
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-1">
-                <span className="text-sm font-bold text-slate-900">Student Categories</span>
+                <span className="text-sm font-bold text-slate-900">
+                  Student Categories
+                </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
                   {filteredCategories.length}
                 </span>
@@ -621,7 +742,7 @@ export default function StudentCategoryPage() {
                       className="flex items-center w-full px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors duration-150"
                     >
                       <Edit className="h-3.5 w-3.5 mr-2" />
-                      {bulkUpdateMode ? 'Exit Bulk Update' : 'Bulk Update'}
+                      {bulkUpdateMode ? "Exit Bulk Update" : "Bulk Update"}
                     </button>
                     <button
                       onClick={() => {
@@ -691,41 +812,71 @@ export default function StudentCategoryPage() {
                   <tr>
                     {bulkUpdateMode && (
                       <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
-                        <Checkbox checked={isAllSelected} onChange={toggleSelectAll} />
+                        <Checkbox
+                          checked={isAllSelected}
+                          onChange={toggleSelectAll}
+                        />
                       </th>
                     )}
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Category Details</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">Actions</th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
+                      Category Details
+                    </th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-slate-600 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-200/60">
                   {filteredCategories.length === 0 ? (
                     <tr>
-                      <td colSpan={bulkUpdateMode ? 5 : 4} className="px-4 py-6 text-center text-slate-500 text-xs">
-                        {searchTerm ? 'No categories found matching your search.' : 'No categories available. Create your first category!'}
+                      <td
+                        colSpan={bulkUpdateMode ? 5 : 4}
+                        className="px-4 py-6 text-center text-slate-500 text-xs"
+                      >
+                        {searchTerm
+                          ? "No categories found matching your search."
+                          : "No categories available. Create your first category!"}
                       </td>
                     </tr>
                   ) : (
                     filteredCategories.map((category) => (
-                      <tr key={category.id} className={`hover:bg-slate-50/50 transition-colors duration-150 ${bulkUpdateMode && isSelected(category.id) ? 'bg-blue-50' : ''}`}>
+                      <tr
+                        key={category.id}
+                        className={`hover:bg-slate-50/50 transition-colors duration-150 ${
+                          bulkUpdateMode && isSelected(category.id)
+                            ? "bg-blue-50"
+                            : ""
+                        }`}
+                      >
                         {bulkUpdateMode && (
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <Checkbox checked={isSelected(category.id)} onChange={() => toggleItem(category.id)} />
+                            <Checkbox
+                              checked={isSelected(category.id)}
+                              onChange={() => toggleItem(category.id)}
+                            />
                           </td>
                         )}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg flex items-center justify-center shadow-sm">
-                              <span className="text-white font-semibold text-xs">{category.categoryShortName}</span>
+                              <span className="text-white font-semibold text-xs">
+                                {category.categoryShortName}
+                              </span>
                             </div>
                             <div className="ml-3">
-                              <div className="text-xs font-medium text-slate-900">{category.categoryName}</div>
-                              <div className="text-xs text-slate-500">Code: {category.categoryShortName}</div>
+                              <div className="text-xs font-medium text-slate-900">
+                                {category.categoryName}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                Code: {category.categoryShortName}
+                              </div>
                             </div>
                           </div>
                         </td>
-                        
+
                         <td className="px-4 py-3 whitespace-nowrap">
                           <StatusBadge isActive={category.isActive} size="sm" />
                         </td>
@@ -762,11 +913,13 @@ export default function StudentCategoryPage() {
                     <span className="text-sm text-slate-600">Show:</span>
                     <select
                       value={pageSize}
-                      onChange={e => setPageSize(Number(e.target.value))}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
                       className="border border-slate-300 rounded-md px-3 py-1.5 text-sm bg-white text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-400 shadow-sm"
                     >
-                      {pageSizeOptions.map(size => (
-                        <option key={size} value={size}>{size}</option>
+                      {pageSizeOptions.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
                       ))}
                     </select>
                     <span className="text-sm text-slate-600">per page</span>
@@ -775,28 +928,70 @@ export default function StudentCategoryPage() {
                     Showing {startItem} to {endItem} of {totalCount} categories
                   </div>
                   <div className="flex items-center space-x-1">
-                    <Button variant="outline" size="sm" onClick={goToFirstPage} disabled={!hasPrevPage} className="px-2" title="First page">⏮</Button>
-                    <Button variant="outline" size="sm" onClick={prevPage} disabled={!hasPrevPage} title="Previous page">⏪ Prev</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToFirstPage}
+                      disabled={!hasPrevPage}
+                      className="px-2"
+                      title="First page"
+                    >
+                      ⏮
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={prevPage}
+                      disabled={!hasPrevPage}
+                      title="Previous page"
+                    >
+                      ⏪ Prev
+                    </Button>
                     <div className="flex items-center space-x-1 mx-2">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const startPage = Math.max(0, Math.min(pageIndex - 2, totalPages - 5));
-                        const pageNumber = startPage + i;
-                        if (pageNumber >= totalPages) return null;
-                        return (
-                          <Button
-                            key={pageNumber}
-                            variant={pageIndex === pageNumber ? "primary" : "outline"}
-                            size="sm"
-                            onClick={() => setPageIndex(pageNumber)}
-                            className="px-3 min-w-[2.5rem]"
-                          >
-                            {pageNumber + 1}
-                          </Button>
-                        );
-                      })}
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          const startPage = Math.max(
+                            0,
+                            Math.min(pageIndex - 2, totalPages - 5)
+                          );
+                          const pageNumber = startPage + i;
+                          if (pageNumber >= totalPages) return null;
+                          return (
+                            <Button
+                              key={pageNumber}
+                              variant={
+                                pageIndex === pageNumber ? "primary" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setPageIndex(pageNumber)}
+                              className="px-3 min-w-[2.5rem]"
+                            >
+                              {pageNumber + 1}
+                            </Button>
+                          );
+                        }
+                      )}
                     </div>
-                    <Button variant="outline" size="sm" onClick={nextPage} disabled={!hasNextPage} title="Next page">Next ⏩</Button>
-                    <Button variant="outline" size="sm" onClick={goToLastPage} disabled={!hasNextPage} className="px-2" title="Last page">⏭</Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={nextPage}
+                      disabled={!hasNextPage}
+                      title="Next page"
+                    >
+                      Next ⏩
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={goToLastPage}
+                      disabled={!hasNextPage}
+                      className="px-2"
+                      title="Last page"
+                    >
+                      ⏭
+                    </Button>
                   </div>
                 </div>
                 <div className="md:hidden space-y-3">
@@ -808,26 +1003,58 @@ export default function StudentCategoryPage() {
                       <span className="text-sm text-slate-600">Show:</span>
                       <select
                         value={pageSize}
-                        onChange={e => setPageSize(Number(e.target.value))}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
                         className="border border-slate-300 rounded-md px-3 py-1.5 text-sm bg-white text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-400 shadow-sm"
                       >
-                        {pageSizeOptions.map(size => (
-                          <option key={size} value={size}>{size}</option>
+                        {pageSizeOptions.map((size) => (
+                          <option key={size} value={size}>
+                            {size}
+                          </option>
                         ))}
                       </select>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-1">
-                      <Button variant="outline" size="sm" onClick={goToFirstPage} disabled={!hasPrevPage} className="px-2">⏮</Button>
-                      <Button variant="outline" size="sm" onClick={prevPage} disabled={!hasPrevPage}>⏪</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToFirstPage}
+                        disabled={!hasPrevPage}
+                        className="px-2"
+                      >
+                        ⏮
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={prevPage}
+                        disabled={!hasPrevPage}
+                      >
+                        ⏪
+                      </Button>
                     </div>
                     <div className="text-sm text-slate-600">
                       Page {pageIndex + 1} of {totalPages}
                     </div>
                     <div className="flex items-center space-x-1">
-                      <Button variant="outline" size="sm" onClick={nextPage} disabled={!hasNextPage}>⏩</Button>
-                      <Button variant="outline" size="sm" onClick={goToLastPage} disabled={!hasNextPage} className="px-2">⏭</Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={nextPage}
+                        disabled={!hasNextPage}
+                      >
+                        ⏩
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={goToLastPage}
+                        disabled={!hasNextPage}
+                        className="px-2"
+                      >
+                        ⏭
+                      </Button>
                     </div>
                   </div>
                 </div>
@@ -842,17 +1069,30 @@ export default function StudentCategoryPage() {
         {/* Add/Edit Modal */}
         <Modal
           isOpen={showAddForm}
-          onClose={() => { setShowAddForm(false); setEditingCategory(null); resetForm(); }}
-          title={editingCategory ? 'Edit Student Category' : 'Create Student Category'}
+          onClose={() => {
+            setShowAddForm(false);
+            setEditingCategory(null);
+            resetForm();
+          }}
+          title={
+            editingCategory
+              ? "Edit Student Category"
+              : "Create Student Category"
+          }
           size="md"
         >
-          <form onSubmit={editingCategory ? handleUpdate : handleCreate} className="space-y-4">
+          <form
+            onSubmit={editingCategory ? handleUpdate : handleCreate}
+            className="space-y-4"
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Input
                 label="Category Name"
                 required
                 value={formData.categoryName}
-                onChange={e => handleInputChange('categoryName', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("categoryName", e.target.value)
+                }
                 error={formErrors.categoryName}
                 placeholder="Enter category name"
               />
@@ -860,33 +1100,82 @@ export default function StudentCategoryPage() {
                 label="Short Name"
                 required
                 value={formData.categoryShortName}
-                onChange={e => handleInputChange('categoryShortName', e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("categoryShortName", e.target.value)
+                }
                 error={formErrors.categoryShortName}
                 placeholder="Enter short name"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-2">Status</label>
+              <label className="block text-xs font-medium text-slate-700 mb-2">
+                Status
+              </label>
               <div className="flex items-center space-x-4">
                 <label className="flex items-center cursor-pointer">
-                  <input type="radio" name="status" checked={formData.isActive === true} onChange={() => handleInputChange('isActive', true)} className="h-3.5 w-3.5 text-slate-600 focus:ring-slate-500 border-slate-300" />
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={formData.isActive === true}
+                    onChange={() => handleInputChange("isActive", true)}
+                    className="h-3.5 w-3.5 text-slate-600 focus:ring-slate-500 border-slate-300"
+                  />
                   <span className="ml-1.5 text-xs text-slate-700">Active</span>
                 </label>
                 <label className="flex items-center cursor-pointer">
-                  <input type="radio" name="status" checked={formData.isActive === false} onChange={() => handleInputChange('isActive', false)} className="h-3.5 w-3.5 text-red-600 focus:ring-red-500 border-slate-300" />
-                  <span className="ml-1.5 text-xs text-slate-700">Inactive</span>
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={formData.isActive === false}
+                    onChange={() => handleInputChange("isActive", false)}
+                    className="h-3.5 w-3.5 text-red-600 focus:ring-red-500 border-slate-300"
+                  />
+                  <span className="ml-1.5 text-xs text-slate-700">
+                    Inactive
+                  </span>
                 </label>
               </div>
             </div>
             <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200/60">
-              <Button type="button" variant="secondary" size="sm" onClick={() => { setShowAddForm(false); setEditingCategory(null); resetForm(); resetFormErrors(); }}>Cancel</Button>
-              <Button type="submit" size="sm" disabled={isSubmitting} loading={isSubmitting}>{editingCategory ? 'Update' : 'Create'}</Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setEditingCategory(null);
+                  resetForm();
+                  resetFormErrors();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting}
+                loading={isSubmitting}
+              >
+                {editingCategory ? "Update" : "Create"}
+              </Button>
             </div>
           </form>
         </Modal>
 
         {/* Confirmation Dialog */}
-        <ConfirmationDialog isOpen={confirmDialog.isOpen} onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} onConfirm={confirmDialog.onConfirm ?? (() => {})} title={confirmDialog.title} message={confirmDialog.message} type="danger" confirmText="Delete" cancelText="Cancel" loading={confirmDialog.loading} />
+        <ConfirmationDialog
+          isOpen={confirmDialog.isOpen}
+          onClose={() =>
+            setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+          }
+          onConfirm={confirmDialog.onConfirm ?? (() => {})}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          type="danger"
+          confirmText="Delete"
+          cancelText="Cancel"
+          loading={confirmDialog.loading}
+        />
         {/* Import Dialog (matches class page, with sample CSV) */}
         <MasterImportDialog
           isOpen={showImportDialog}
@@ -894,9 +1183,11 @@ export default function StudentCategoryPage() {
           onImport={handleImport}
         />
         {/* Help Dialog */}
-        <MasterHelpDialog isOpen={showHelpDialog} onClose={() => setShowHelpDialog(false)} />
+        <MasterHelpDialog
+          isOpen={showHelpDialog}
+          onClose={() => setShowHelpDialog(false)}
+        />
       </div>
     </div>
   );
-
-  }
+}

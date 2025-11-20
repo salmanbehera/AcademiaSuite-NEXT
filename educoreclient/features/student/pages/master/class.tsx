@@ -1,34 +1,53 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { 
-  Edit, Trash2, RefreshCw, AlertCircle, 
-  Building2, Users, Target, Activity, CheckCircle2, Plus, X, MoreVertical, Upload, Download, Edit3, HelpCircle
-} from 'lucide-react';
-import { useClasses } from '@/features/student/hooks/master';
-import { useBulkSelection } from '@/hooks/useBulkSelection';
-import { 
-  MasterBulkActions, 
-  MasterImportDialog, 
-  MasterHelpDialog 
-} from '@/features/student/shared';
-import { ClassDto } from '@/features/student/types/master/classTypes';
-import { Button } from '@/app/components/ui/Button';
-import { Checkbox } from '@/app/components/ui/Checkbox';
-import { StatsCard } from '@/app/components/ui/StatsCard';
-import { SearchBox } from '@/app/components/ui/SearchBox';
-import { Modal } from '@/app/components/ui/Modal';
-import { Input } from '@/app/components/ui/Input';
-import { StatusBadge } from '@/app/components/ui/StatusBadge';
-import { ConfirmationDialog } from '@/app/components/ui/ConfirmationDialog';
-import { useToast } from '@/app/components/ui/ToastProvider';
-import { OrganizationConfig } from '@/app/components/ui/OrganizationConfig';
-import { validateClassForm, isFormValid, ClassFormData } from '@/lib/validations';
-import { CLASS_FORM_DEFAULTS, MESSAGES } from '@/lib/constants';
+import { useState, useEffect, useRef } from "react";
+import {
+  Edit,
+  Trash2,
+  RefreshCw,
+  AlertCircle,
+  Building2,
+  Users,
+  Target,
+  Activity,
+  CheckCircle2,
+  Plus,
+  X,
+  MoreVertical,
+  Upload,
+  Download,
+  Edit3,
+  HelpCircle,
+} from "lucide-react";
+import { useClasses } from "@/features/student/hooks/master";
+import { useBulkSelection } from "@/hooks/useBulkSelection";
+import {
+  MasterBulkActions,
+  MasterImportDialog,
+  MasterHelpDialog,
+} from "@/features/student/shared";
+import { ClassDto } from "@/features/student/types/master/classTypes";
+import { Button } from "@/app/components/ui/Button";
+import { Checkbox } from "@/app/components/ui/Checkbox";
+import { StatsCard } from "@/app/components/ui/StatsCard";
+import { SearchBox } from "@/app/components/ui/SearchBox";
+import { Modal } from "@/app/components/ui/Modal";
+import { Input } from "@/app/components/ui/Input";
+import { StatusBadge } from "@/app/components/ui/StatusBadge";
+import { ConfirmationDialog } from "@/app/components/ui/ConfirmationDialog";
+import { useToast } from "@/app/components/ui/ToastProvider";
+import { applyValidationToForm } from "@/lib/validationUtils";
+import { OrganizationConfig } from "@/app/components/ui/OrganizationConfig";
+import {
+  validateClassForm,
+  isFormValid,
+  ClassFormData,
+} from "@/lib/validations";
+import { CLASS_FORM_DEFAULTS, MESSAGES } from "@/lib/constants";
 
 export default function ClassPage() {
   const { showSuccess, showError, showWarning, showInfo } = useToast();
-  
+
   const {
     classes,
     loading,
@@ -36,7 +55,7 @@ export default function ClassPage() {
     totalCount,
     pageIndex,
     pageSize,
-    
+
     // Pagination computed values
     totalPages,
     hasNextPage,
@@ -44,7 +63,7 @@ export default function ClassPage() {
     startItem,
     endItem,
     pageSizeOptions,
-    
+
     // Actions
     createClass,
     updateClass,
@@ -52,7 +71,7 @@ export default function ClassPage() {
     bulkDeleteClasses,
     toggleClassStatus,
     importClasses,
-    
+
     // Pagination actions
     setPageIndex,
     setPageSize,
@@ -64,7 +83,7 @@ export default function ClassPage() {
   } = useClasses();
 
   const [showAddForm, setShowAddForm] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [editingClass, setEditingClass] = useState<string | null>(null);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -78,14 +97,17 @@ export default function ClassPage() {
   // Close more actions dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (moreActionsRef.current && !moreActionsRef.current.contains(event.target as Node)) {
+      if (
+        moreActionsRef.current &&
+        !moreActionsRef.current.contains(event.target as Node)
+      ) {
         setShowMoreActions(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -98,19 +120,22 @@ export default function ClassPage() {
     loading: boolean;
   }>({
     isOpen: false,
-    title: '',
-    message: '',
+    title: "",
+    message: "",
     onConfirm: () => {},
-    loading: false
+    loading: false,
   });
-  
+
   // Form state using constants
   const [formData, setFormData] = useState<ClassFormData>(CLASS_FORM_DEFAULTS);
 
   // Filter classes based on search
-  const filteredClasses = classes.filter(cls =>
-    (cls.className && cls.className.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (cls.classShortName && cls.classShortName.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredClasses = classes.filter(
+    (cls) =>
+      (cls.className &&
+        cls.className.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (cls.classShortName &&
+        cls.classShortName.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Bulk selection functionality (after filteredClasses)
@@ -135,14 +160,17 @@ export default function ClassPage() {
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
-      showWarning('Validation Error', 'Please fix the errors in the form before submitting.');
+      showWarning(
+        "Validation Error",
+        "Please fix the errors in the form before submitting."
+      );
       return;
     }
 
     setIsSubmitting(true);
-    
+
     try {
       // Ensure numeric fields are properly typed
       const submissionData = {
@@ -151,29 +179,46 @@ export default function ClassPage() {
         maxStrength: Number(formData.maxStrength) || 0,
         reservationSeats: Number(formData.reservationSeats) || 0,
       };
-      
+
       if (editingClass) {
         const success = await updateClass(editingClass, submissionData);
         if (success) {
-          showSuccess('Class Updated', 'Class has been updated successfully.');
+          showSuccess("Class Updated", "Class has been updated successfully.");
           setShowAddForm(false);
           setEditingClass(null);
           resetForm();
         } else {
-          showError('Update Failed', 'Failed to update the class. Please try again.');
+          showError(
+            "Update Failed",
+            "Failed to update the class. Please try again."
+          );
         }
       } else {
         const success = await createClass(submissionData);
         if (success) {
-          showSuccess('Class Created', 'New class has been created successfully.');
+          showSuccess(
+            "Class Created",
+            "New class has been created successfully."
+          );
           setShowAddForm(false);
           resetForm();
         } else {
-          showError('Creation Failed', 'Failed to create the class. Please try again.');
+          showError(
+            "Creation Failed",
+            "Failed to create the class. Please try again."
+          );
         }
       }
     } catch (error) {
-      showError('Operation Failed', 'An unexpected error occurred. Please try again.');
+      // If server returned validation errors, apply them to the form and
+      // avoid showing a general error toast (user sees inline messages).
+      const applied = applyValidationToForm(setFormErrors, error);
+      if (!applied) {
+        showError(
+          "Operation Failed",
+          "An unexpected error occurred. Please try again."
+        );
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -188,8 +233,8 @@ export default function ClassPage() {
   // Handle edit
   const handleEdit = (classItem: any) => {
     setFormData({
-      className: classItem.className || '',
-      classShortName: classItem.classShortName || '',
+      className: classItem.className || "",
+      classShortName: classItem.classShortName || "",
       displayOrder: Number(classItem.displayOrder) || 1,
       maxStrength: Number(classItem.maxStrength) || 40,
       reservationSeats: Number(classItem.reservationSeats) || 0,
@@ -204,29 +249,40 @@ export default function ClassPage() {
   const handleDelete = async (id: string) => {
     setConfirmDialog({
       isOpen: true,
-      title: 'Delete Class',
-      message: 'Are you sure you want to delete this class? This action cannot be undone.',
+      title: "Delete Class",
+      message:
+        "Are you sure you want to delete this class? This action cannot be undone.",
       onConfirm: () => confirmDelete(id),
-      loading: false
+      loading: false,
     });
   };
 
   // Confirm delete action
   const confirmDelete = async (id: string) => {
-    setConfirmDialog(prev => ({ ...prev, loading: true }));
-    
+    setConfirmDialog((prev) => ({ ...prev, loading: true }));
+
     try {
       const success = await deleteClass(id);
       if (success) {
-        showSuccess('Class Deleted', 'Class has been deleted successfully.');
-        setConfirmDialog(prev => ({ ...prev, isOpen: false, loading: false }));
+        showSuccess("Class Deleted", "Class has been deleted successfully.");
+        setConfirmDialog((prev) => ({
+          ...prev,
+          isOpen: false,
+          loading: false,
+        }));
       } else {
-        showError('Delete Failed', 'Failed to delete the class. Please try again.');
-        setConfirmDialog(prev => ({ ...prev, loading: false }));
+        showError(
+          "Delete Failed",
+          "Failed to delete the class. Please try again."
+        );
+        setConfirmDialog((prev) => ({ ...prev, loading: false }));
       }
     } catch (error) {
-      showError('Delete Failed', 'An unexpected error occurred while deleting the class.');
-      setConfirmDialog(prev => ({ ...prev, loading: false }));
+      showError(
+        "Delete Failed",
+        "An unexpected error occurred while deleting the class."
+      );
+      setConfirmDialog((prev) => ({ ...prev, loading: false }));
     }
   };
 
@@ -234,11 +290,17 @@ export default function ClassPage() {
   const handleBulkDelete = async () => {
     const success = await bulkDeleteClasses(Array.from(selectedItems));
     if (success) {
-      showSuccess('Bulk Delete Successful', `${selectedCount} classes have been deleted successfully.`);
+      showSuccess(
+        "Bulk Delete Successful",
+        `${selectedCount} classes have been deleted successfully.`
+      );
       clearSelection();
       setShowBulkDeleteDialog(false);
     } else {
-      showError('Bulk Delete Failed', 'Failed to delete selected classes. Please try again.');
+      showError(
+        "Bulk Delete Failed",
+        "Failed to delete selected classes. Please try again."
+      );
     }
   };
 
@@ -247,13 +309,22 @@ export default function ClassPage() {
     try {
       const success = await toggleClassStatus(id, !currentStatus);
       if (success) {
-        const statusText = currentStatus ? 'deactivated' : 'activated';
-        showSuccess('Status Updated', `Class has been ${statusText} successfully.`);
+        const statusText = currentStatus ? "deactivated" : "activated";
+        showSuccess(
+          "Status Updated",
+          `Class has been ${statusText} successfully.`
+        );
       } else {
-        showError('Status Update Failed', 'Failed to update class status. Please try again.');
+        showError(
+          "Status Update Failed",
+          "Failed to update class status. Please try again."
+        );
       }
     } catch (error) {
-      showError('Update Failed', 'An unexpected error occurred while updating the status.');
+      showError(
+        "Update Failed",
+        "An unexpected error occurred while updating the status."
+      );
     }
   };
 
@@ -262,46 +333,55 @@ export default function ClassPage() {
     try {
       // Prepare data for export
       const exportData = filteredClasses.map((classItem, index) => ({
-        'S.No': index + 1,
-        'Class Name': classItem.className,
-        'Class Code': classItem.classShortName,
-        'Display Order': classItem.displayOrder,
-        'Max Strength': classItem.maxStrength,
-        'Reserved Seats': classItem.reservationSeats,
-        'Available Seats': classItem.maxStrength - classItem.reservationSeats,
-        'Status': classItem.isActive ? 'Active' : 'Inactive',
-        'Created Date': new Date().toLocaleDateString(), // You can use actual created date if available
+        "S.No": index + 1,
+        "Class Name": classItem.className,
+        "Class Code": classItem.classShortName,
+        "Display Order": classItem.displayOrder,
+        "Max Strength": classItem.maxStrength,
+        "Reserved Seats": classItem.reservationSeats,
+        "Available Seats":
+          (classItem.maxStrength ?? 0) - (classItem.reservationSeats ?? 0),
+        Status: classItem.isActive ? "Active" : "Inactive",
+        "Created Date": new Date().toLocaleDateString(), // You can use actual created date if available
       }));
 
       // Convert to CSV
       const headers = Object.keys(exportData[0] || {});
       const csvContent = [
-        headers.join(','),
-        ...exportData.map(row => 
-          headers.map(header => {
-            const value = row[header as keyof typeof row];
-            // Escape commas and quotes in CSV
-            return typeof value === 'string' && value.includes(',') 
-              ? `"${value.replace(/"/g, '""')}"` 
-              : value;
-          }).join(',')
-        )
-      ].join('\n');
+        headers.join(","),
+        ...exportData.map((row) =>
+          headers
+            .map((header) => {
+              const value = row[header as keyof typeof row];
+              // Escape commas and quotes in CSV
+              return typeof value === "string" && value.includes(",")
+                ? `"${value.replace(/"/g, '""')}"`
+                : value;
+            })
+            .join(",")
+        ),
+      ].join("\n");
 
       // Create and download file
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `classes_export_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `classes_export_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
 
-      showSuccess('Export Successful', `${exportData.length} classes exported successfully.`);
+      showSuccess(
+        "Export Successful",
+        `${exportData.length} classes exported successfully.`
+      );
     } catch (error) {
-      showError('Export Failed', 'Failed to export classes. Please try again.');
+      showError("Export Failed", "Failed to export classes. Please try again.");
     }
   };
 
@@ -313,11 +393,18 @@ export default function ClassPage() {
     try {
       const result = await importClasses(file, onProgress);
       if (result) {
-        showSuccess('Import Successful', `${result.success} classes imported successfully.${result.errors.length > 0 ? ` ${result.errors.length} records failed.` : ''}`);
+        showSuccess(
+          "Import Successful",
+          `${result.success} classes imported successfully.${
+            result.errors.length > 0
+              ? ` ${result.errors.length} records failed.`
+              : ""
+          }`
+        );
       }
       return result;
     } catch (error) {
-      showError('Import Failed', 'Failed to import classes. Please try again.');
+      showError("Import Failed", "Failed to import classes. Please try again.");
       return null;
     }
   };
@@ -328,7 +415,9 @@ export default function ClassPage() {
         {/* Compact Professional Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white rounded-lg shadow-sm border border-slate-200/60 p-2.5">
           <div>
-            <h1 className="text-base font-bold text-slate-900 tracking-tight">Class Management</h1>
+            <h1 className="text-base font-bold text-slate-900 tracking-tight">
+              Class Management
+            </h1>
             <p className="mt-0.5 text-xs text-slate-600">
               Configure and manage academic classes for your institution
             </p>
@@ -340,7 +429,10 @@ export default function ClassPage() {
               icon={RefreshCw}
               onClick={() => {
                 refresh();
-                showSuccess('Data Refreshed', 'Class data has been refreshed successfully.');
+                showSuccess(
+                  "Data Refreshed",
+                  "Class data has been refreshed successfully."
+                );
               }}
               disabled={loading}
               loading={loading}
@@ -366,8 +458,13 @@ export default function ClassPage() {
         <div className="bg-white rounded-lg shadow-sm border border-slate-200/60 p-2.5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-xs font-medium text-slate-900">Organization Configuration</h3>
-              <p className="text-xs text-slate-600 mt-0.5">Current organization and branch settings (will be from JWT in production)</p>
+              <h3 className="text-xs font-medium text-slate-900">
+                Organization Configuration
+              </h3>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Current organization and branch settings (will be from JWT in
+                production)
+              </p>
             </div>
             <OrganizationConfig />
           </div>
@@ -379,7 +476,9 @@ export default function ClassPage() {
             <div className="flex items-start">
               <AlertCircle className="h-3.5 w-3.5 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
               <div className="flex-1">
-                <h3 className="text-xs font-medium text-red-900">Error occurred</h3>
+                <h3 className="text-xs font-medium text-red-900">
+                  Error occurred
+                </h3>
                 <p className="mt-0.5 text-xs text-red-700">{error}</p>
               </div>
               <Button
@@ -387,7 +486,7 @@ export default function ClassPage() {
                 size="sm"
                 onClick={() => {
                   window.location.reload();
-                  showInfo('Reloading Page', 'The page is being reloaded...');
+                  showInfo("Reloading Page", "The page is being reloaded...");
                 }}
                 className="text-red-600 hover:text-red-800 border-red-200 hover:border-red-300"
               >
@@ -408,30 +507,36 @@ export default function ClassPage() {
             iconBgColor="bg-slate-100"
             valueColor="text-slate-900"
           />
-          
+
           <StatsCard
             title="Active"
-            value={classes.filter(c => c.isActive).length}
+            value={classes.filter((c) => c.isActive).length}
             subtitle="Running"
             icon={Activity}
             iconColor="text-emerald-600"
             iconBgColor="bg-emerald-50"
             valueColor="text-emerald-700"
           />
-          
+
           <StatsCard
             title="Capacity"
-            value={classes.reduce((sum, cls) => sum + (cls.maxStrength || 0), 0)}
+            value={classes.reduce(
+              (sum, cls) => sum + (cls.maxStrength || 0),
+              0
+            )}
             subtitle="Students"
             icon={Users}
             iconColor="text-blue-600"
             iconBgColor="bg-blue-50"
             valueColor="text-blue-700"
           />
-          
+
           <StatsCard
             title="Reserved"
-            value={classes.reduce((sum, cls) => sum + (cls.reservationSeats || 0), 0)}
+            value={classes.reduce(
+              (sum, cls) => sum + (cls.reservationSeats || 0),
+              0
+            )}
             subtitle="Seats"
             icon={Target}
             iconColor="text-amber-600"
@@ -466,7 +571,9 @@ export default function ClassPage() {
                 {/* Left: Title and Mode Indicator */}
                 <div className="flex items-center space-x-3">
                   <div className="flex items-center space-x-1">
-                    <span className="text-sm font-bold text-slate-900">Classes</span>
+                    <span className="text-sm font-bold text-slate-900">
+                      Classes
+                    </span>
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
                       {filteredClasses.length}
                     </span>
@@ -487,7 +594,7 @@ export default function ClassPage() {
                     className="w-full"
                   />
                 </div>
-                
+
                 {/* Right: More Actions Dropdown */}
                 <div className="relative" ref={moreActionsRef}>
                   <button
@@ -497,7 +604,7 @@ export default function ClassPage() {
                     <MoreVertical className="h-3.5 w-3.5 mr-1" />
                     More Actions
                   </button>
-                  
+
                   {showMoreActions && (
                     <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg border border-slate-200 z-10">
                       <div className="py-1">
@@ -512,7 +619,7 @@ export default function ClassPage() {
                           className="flex items-center w-full px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 transition-colors duration-150"
                         >
                           <Edit3 className="h-3.5 w-3.5 mr-2" />
-                          {bulkUpdateMode ? 'Exit Bulk Update' : 'Bulk Update'}
+                          {bulkUpdateMode ? "Exit Bulk Update" : "Bulk Update"}
                         </button>
                         <button
                           onClick={() => {
@@ -583,13 +690,25 @@ export default function ClassPage() {
                 <tbody className="bg-white divide-y divide-slate-200/60">
                   {filteredClasses.length === 0 ? (
                     <tr>
-                      <td colSpan={bulkUpdateMode ? 6 : 5} className="px-4 py-6 text-center text-slate-500 text-xs">
-                        {searchTerm ? 'No classes found matching your search.' : 'No classes available. Create your first class!'}
+                      <td
+                        colSpan={bulkUpdateMode ? 6 : 5}
+                        className="px-4 py-6 text-center text-slate-500 text-xs"
+                      >
+                        {searchTerm
+                          ? "No classes found matching your search."
+                          : "No classes available. Create your first class!"}
                       </td>
                     </tr>
                   ) : (
                     filteredClasses.map((classItem) => (
-                      <tr key={classItem.id} className={`hover:bg-slate-50/50 transition-colors duration-150 ${bulkUpdateMode && isSelected(classItem.id) ? 'bg-blue-50' : ''}`}>
+                      <tr
+                        key={classItem.id}
+                        className={`hover:bg-slate-50/50 transition-colors duration-150 ${
+                          bulkUpdateMode && isSelected(classItem.id)
+                            ? "bg-blue-50"
+                            : ""
+                        }`}
+                      >
                         {bulkUpdateMode && (
                           <td className="px-4 py-3 whitespace-nowrap">
                             <Checkbox
@@ -601,25 +720,42 @@ export default function ClassPage() {
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg flex items-center justify-center shadow-sm">
-                              <span className="text-white font-semibold text-xs">{classItem.classShortName}</span>
+                              <span className="text-white font-semibold text-xs">
+                                {classItem.classShortName}
+                              </span>
                             </div>
                             <div className="ml-3">
-                              <div className="text-xs font-medium text-slate-900">{classItem.className}</div>
-                              <div className="text-xs text-slate-500">Code: {classItem.classShortName}</div>
+                              <div className="text-xs font-medium text-slate-900">
+                                {classItem.className}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                Code: {classItem.classShortName}
+                              </div>
                             </div>
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-xs font-medium text-slate-900">{classItem.maxStrength || 0}</div>
-                          <div className="text-xs text-slate-500">{classItem.reservationSeats || 0} reserved</div>
+                          <div className="text-xs font-medium text-slate-900">
+                            {classItem.maxStrength || 0}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {classItem.reservationSeats || 0} reserved
+                          </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="text-xs text-slate-900">{classItem.displayOrder || 0}</div>
+                          <div className="text-xs text-slate-900">
+                            {classItem.displayOrder || 0}
+                          </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <StatusBadge
                             isActive={classItem.isActive}
-                            onClick={() => handleStatusToggle(classItem.id, classItem.isActive)}
+                            onClick={() =>
+                              handleStatusToggle(
+                                classItem.id,
+                                classItem.isActive
+                              )
+                            }
                             size="sm"
                           />
                         </td>
@@ -647,7 +783,7 @@ export default function ClassPage() {
                 </tbody>
               </table>
             </div>
-            
+
             {/* Enhanced Pagination */}
             {totalCount > 0 && (
               <div className="bg-slate-50/50 px-4 py-3 border-t border-slate-200/60">
@@ -702,24 +838,32 @@ export default function ClassPage() {
 
                     {/* Page Numbers */}
                     <div className="flex items-center space-x-1 mx-2">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        const startPage = Math.max(0, Math.min(pageIndex - 2, totalPages - 5));
-                        const pageNumber = startPage + i;
-                        
-                        if (pageNumber >= totalPages) return null;
-                        
-                        return (
-                          <Button
-                            key={pageNumber}
-                            variant={pageIndex === pageNumber ? "primary" : "outline"}
-                            size="sm"
-                            onClick={() => setPageIndex(pageNumber)}
-                            className="px-3 min-w-[2.5rem]"
-                          >
-                            {pageNumber + 1}
-                          </Button>
-                        );
-                      })}
+                      {Array.from(
+                        { length: Math.min(5, totalPages) },
+                        (_, i) => {
+                          const startPage = Math.max(
+                            0,
+                            Math.min(pageIndex - 2, totalPages - 5)
+                          );
+                          const pageNumber = startPage + i;
+
+                          if (pageNumber >= totalPages) return null;
+
+                          return (
+                            <Button
+                              key={pageNumber}
+                              variant={
+                                pageIndex === pageNumber ? "primary" : "outline"
+                              }
+                              size="sm"
+                              onClick={() => setPageIndex(pageNumber)}
+                              className="px-3 min-w-[2.5rem]"
+                            >
+                              {pageNumber + 1}
+                            </Button>
+                          );
+                        }
+                      )}
                     </div>
 
                     {/* Next Page */}
@@ -835,122 +979,152 @@ export default function ClassPage() {
             setEditingClass(null);
             resetForm();
           }}
-          title={editingClass ? 'Edit Class' : 'Create New Class'}
+          title={editingClass ? "Edit Class" : "Create New Class"}
           size="md"
         >
-          <form onSubmit={handleSubmit} className="space-y-4">{/* Rest of form content here */}
-                {/* Class Name and Short Name */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <Input
-                    label="Class Name"
-                    required
-                    value={formData.className}
-                    onChange={(e) => setFormData({ ...formData, className: e.target.value })}
-                    error={formErrors.className}
-                    placeholder="e.g., Class 10"
-                  />
-                  
-                  <Input
-                    label="Short Name"
-                    required
-                    value={formData.classShortName}
-                    onChange={(e) => setFormData({ ...formData, classShortName: e.target.value })}
-                    error={formErrors.classShortName}
-                    placeholder="e.g., C10"
-                  />
-                </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Rest of form content here */}
+            {/* Class Name and Short Name */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Input
+                label="Class Name"
+                required
+                value={formData.className}
+                onChange={(e) =>
+                  setFormData({ ...formData, className: e.target.value })
+                }
+                error={formErrors.className}
+                placeholder="e.g., Class 10"
+              />
 
-                {/* Capacity and Order Settings */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <Input
-                    type="number"
-                    label="Display Order"
-                    required
-                    min={1}
-                    value={formData.displayOrder.toString()}
-                    onChange={(e) => setFormData({ ...formData, displayOrder: parseInt(e.target.value) || 1 })}
-                    error={formErrors.displayOrder}
-                  />
-                  
-                  <Input
-                    type="number"
-                    label="Max Strength"
-                    required
-                    min={1}
-                    value={formData.maxStrength.toString()}
-                    onChange={(e) => setFormData({ ...formData, maxStrength: parseInt(e.target.value) || 40 })}
-                    error={formErrors.maxStrength}
-                  />
-                  
-                  <Input
-                    type="number"
-                    label="Reserved Seats"
-                    required
-                    min={0}
-                    value={formData.reservationSeats.toString()}
-                    onChange={(e) => setFormData({ ...formData, reservationSeats: parseInt(e.target.value) || 0 })}
-                    error={formErrors.reservationSeats}
-                  />
-                </div>
+              <Input
+                label="Short Name"
+                required
+                value={formData.classShortName}
+                onChange={(e) =>
+                  setFormData({ ...formData, classShortName: e.target.value })
+                }
+                error={formErrors.classShortName}
+                placeholder="e.g., C10"
+              />
+            </div>
 
-                {/* Status Selection */}
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-2">Status</label>
-                  <div className="flex items-center space-x-4">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="status"
-                        checked={formData.isActive === true}
-                        onChange={() => setFormData({ ...formData, isActive: true })}
-                        className="h-3.5 w-3.5 text-slate-600 focus:ring-slate-500 border-slate-300"
-                      />
-                      <span className="ml-1.5 text-xs text-slate-700">Active</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="status"
-                        checked={formData.isActive === false}
-                        onChange={() => setFormData({ ...formData, isActive: false })}
-                        className="h-3.5 w-3.5 text-red-600 focus:ring-red-500 border-slate-300"
-                      />
-                      <span className="ml-1.5 text-xs text-slate-700">Inactive</span>
-                    </label>
-                  </div>
-                </div>
+            {/* Capacity and Order Settings */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Input
+                type="number"
+                label="Display Order"
+                required
+                min={1}
+                value={formData.displayOrder.toString()}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    displayOrder: parseInt(e.target.value) || 1,
+                  })
+                }
+                error={formErrors.displayOrder}
+              />
 
-                {/* Form Actions */}
-                <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200/60">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                      setShowAddForm(false);
-                      setEditingClass(null);
-                      resetForm();
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="sm"
-                    disabled={isSubmitting}
-                    loading={isSubmitting}
-                  >
-                    {editingClass ? 'Update' : 'Create'}
-                  </Button>
-                </div>
-              </form>
+              <Input
+                type="number"
+                label="Max Strength"
+                required
+                min={1}
+                value={formData.maxStrength.toString()}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    maxStrength: parseInt(e.target.value) || 40,
+                  })
+                }
+                error={formErrors.maxStrength}
+              />
+
+              <Input
+                type="number"
+                label="Reserved Seats"
+                required
+                min={0}
+                value={formData.reservationSeats.toString()}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    reservationSeats: parseInt(e.target.value) || 0,
+                  })
+                }
+                error={formErrors.reservationSeats}
+              />
+            </div>
+
+            {/* Status Selection */}
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">
+                Status
+              </label>
+              <div className="flex items-center space-x-4">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={formData.isActive === true}
+                    onChange={() =>
+                      setFormData({ ...formData, isActive: true })
+                    }
+                    className="h-3.5 w-3.5 text-slate-600 focus:ring-slate-500 border-slate-300"
+                  />
+                  <span className="ml-1.5 text-xs text-slate-700">Active</span>
+                </label>
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="radio"
+                    name="status"
+                    checked={formData.isActive === false}
+                    onChange={() =>
+                      setFormData({ ...formData, isActive: false })
+                    }
+                    className="h-3.5 w-3.5 text-red-600 focus:ring-red-500 border-slate-300"
+                  />
+                  <span className="ml-1.5 text-xs text-slate-700">
+                    Inactive
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200/60">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setShowAddForm(false);
+                  setEditingClass(null);
+                  resetForm();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={isSubmitting}
+                loading={isSubmitting}
+              >
+                {editingClass ? "Update" : "Create"}
+              </Button>
+            </div>
+          </form>
         </Modal>
 
         {/* Confirmation Dialog */}
         <ConfirmationDialog
           isOpen={confirmDialog.isOpen}
-          onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+          onClose={() =>
+            setConfirmDialog((prev) => ({ ...prev, isOpen: false }))
+          }
           onConfirm={confirmDialog.onConfirm}
           title={confirmDialog.title}
           message={confirmDialog.message}
@@ -966,7 +1140,9 @@ export default function ClassPage() {
           onClose={() => setShowBulkDeleteDialog(false)}
           onConfirm={handleBulkDelete}
           title="Confirm Bulk Delete"
-          message={`Are you sure you want to delete ${selectedCount} selected class${selectedCount > 1 ? 'es' : ''}? This action cannot be undone.`}
+          message={`Are you sure you want to delete ${selectedCount} selected class${
+            selectedCount > 1 ? "es" : ""
+          }? This action cannot be undone.`}
           confirmText="Delete All"
           cancelText="Cancel"
           type="danger"

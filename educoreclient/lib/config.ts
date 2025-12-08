@@ -35,10 +35,10 @@ export const API_CONFIG = {
 export const DEFAULT_ORG_CONFIG = {
   organizationId:
     process.env.NEXT_PUBLIC_DEFAULT_ORG_ID ||
-    "5A5AF950-15BB-488F-B3EB-D1C28DDF1130",
+    "5a5af950-15bb-488f-b3eb-d1c28ddf1130",
   branchId:
     process.env.NEXT_PUBLIC_DEFAULT_BRANCH_ID ||
-    "9B508033-D3AD-428B-B01B-836216EA0CEE",
+    "9b508033-d3ad-428b-b01b-836216ea0cee",
 } as const;
 
 // API Response wrapper type
